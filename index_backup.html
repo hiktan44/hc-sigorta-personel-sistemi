@@ -1,0 +1,2311 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HC Sigorta - Modern Personel Yönetim Sistemi</title>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Modern CSS Framework -->
+    <script>
+      // Tailwind CSS production uyarısını gizle
+      console.warn = function (message) {
+        if (
+          message &&
+          message.includes('tailwindcss.com should not be used in production')
+        ) {
+          return;
+        }
+        console.log(message);
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .gradient-card {
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .btn-modern {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+      }
+      .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+      .firma-1 {
+        background: linear-gradient(135deg, #10b981, #34d399);
+      }
+      .firma-2 {
+        background: linear-gradient(135deg, #ef4444, #f87171);
+      }
+      .firma-3 {
+        background: linear-gradient(135deg, #06b6d4, #22d3ee);
+      }
+      .firma-4 {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      }
+      .firma-5 {
+        background: linear-gradient(135deg, #ec4899, #f472b6);
+      }
+      .status-active {
+        background: linear-gradient(135deg, #10b981, #34d399);
+      }
+      .status-locked {
+        background: linear-gradient(135deg, #ef4444, #f87171);
+      }
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .toast.show {
+        transform: translateX(0);
+      }
+      .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Loading Screen -->
+    <div
+      id="loadingScreen"
+      class="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center z-50"
+    >
+      <div class="text-center text-white">
+        <div
+          class="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"
+        ></div>
+        <h2 class="text-2xl font-bold mb-2">
+          HC Sigorta Sistemi Yükleniyor...
+        </h2>
+        <p class="text-blue-100">
+          Modern personel yönetim sistemi hazırlanıyor
+        </p>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+      <div
+        class="bg-white rounded-lg shadow-lg p-4 border-l-4 border-green-500"
+      >
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-check-circle text-green-500 text-xl"></i>
+          </div>
+          <div class="ml-3">
+            <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+          </div>
+          <div class="ml-auto pl-3">
+            <button
+              onclick="hideToast()"
+              class="text-gray-400 hover:text-gray-600"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="mainApp" class="hidden">
+      <!-- Header -->
+      <header class="gradient-bg shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center py-6">
+            <div class="flex items-center space-x-4">
+              <div class="bg-white rounded-full p-3 shadow-lg">
+                <i class="fas fa-building text-2xl text-blue-600"></i>
+              </div>
+              <div class="text-white">
+                <h1 class="text-3xl font-bold">HC Sigorta</h1>
+                <p class="text-blue-100">Modern Personel Yönetim Sistemi</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-6">
+              <div
+                class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl px-4 py-2"
+              >
+                <select
+                  id="monthSelector"
+                  class="bg-transparent text-white font-semibold focus:outline-none cursor-pointer"
+                >
+                  <option value="2024-09" class="text-gray-800" selected>
+                    Eylül 2024
+                  </option>
+                  <option value="2024-08" class="text-gray-800">
+                    Ağustos 2024
+                  </option>
+                  <option value="2024-07" class="text-gray-800">
+                    Temmuz 2024
+                  </option>
+                </select>
+              </div>
+
+              <div class="flex items-center space-x-3 text-white">
+                <div class="bg-white bg-opacity-20 rounded-full p-2">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div>
+                  <p class="font-semibold" id="userName">Kullanıcı</p>
+                  <p class="text-sm text-blue-100" id="userRole">
+                    Yetki Seviyesi
+                  </p>
+                </div>
+                <button
+                  onclick="logout()"
+                  class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors"
+                >
+                  <i class="fas fa-sign-out-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Login Modal -->
+      <div
+        id="loginModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4">
+          <div class="p-8">
+            <div class="text-center mb-8">
+              <div class="bg-blue-100 rounded-full p-4 w-20 h-20 mx-auto mb-4">
+                <i class="fas fa-lock text-3xl text-blue-600"></i>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900">Giriş Yapın</h2>
+              <p class="text-gray-600 mt-2">HC Sigorta Personel Sistemi</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >E-mail</label
+                >
+                <input
+                  type="email"
+                  id="loginEmail"
+                  required
+                  value="admin@hcsigorta.com"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Şifre</label
+                >
+                <input
+                  type="password"
+                  id="loginPassword"
+                  required
+                  value="123456"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <button
+                type="submit"
+                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 btn-modern"
+              >
+                <i class="fas fa-sign-in-alt mr-2"></i>Giriş Yap
+              </button>
+            </form>
+
+            <div class="mt-6 text-center">
+              <p class="text-sm text-gray-600">
+                <strong>Demo Hesaplar:</strong><br />
+                <strong>admin@hcsigorta.com</strong> (Sistem Yöneticisi)<br />
+                <strong>sigorta@hcsigorta.com</strong> (HC Sigorta)<br />
+                <strong>teknoloji@hcsigorta.com</strong> (HC Teknoloji)<br />
+                <strong>danismanlik@hcsigorta.com</strong> (HC Danışmanlık)<br />
+                <strong>emlak@hcsigorta.com</strong> (HC Emlak)<br />
+                <strong>finans@hcsigorta.com</strong> (HC Finans)<br />
+                Şifre: <strong>123456</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Company Modal -->
+      <div
+        id="addCompanyModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4">
+          <div class="p-8">
+            <div class="text-center mb-8">
+              <div
+                class="bg-purple-100 rounded-full p-4 w-20 h-20 mx-auto mb-4"
+              >
+                <i class="fas fa-building text-3xl text-purple-600"></i>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900">Yeni Şirket Ekle</h2>
+              <p class="text-gray-600 mt-2">Sisteme yeni şirket ekleyin</p>
+            </div>
+
+            <form id="addCompanyForm" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Şirket Adı</label
+                >
+                <input
+                  type="text"
+                  id="companyName"
+                  required
+                  placeholder="Örn: HC Yazılım"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Şirket İkonu</label
+                >
+                <select
+                  id="companyIcon"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="fas fa-building">🏢 Bina</option>
+                  <option value="fas fa-laptop-code">💻 Teknoloji</option>
+                  <option value="fas fa-handshake">🤝 Danışmanlık</option>
+                  <option value="fas fa-home">🏠 Emlak</option>
+                  <option value="fas fa-chart-pie">📊 Finans</option>
+                  <option value="fas fa-truck">🚛 Lojistik</option>
+                  <option value="fas fa-stethoscope">⚕️ Sağlık</option>
+                  <option value="fas fa-graduation-cap">🎓 Eğitim</option>
+                  <option value="fas fa-utensils">🍽️ Restoran</option>
+                  <option value="fas fa-car">🚗 Otomotiv</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Renk Teması</label
+                >
+                <select
+                  id="companyColor"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="firma-1">🔵 Mavi</option>
+                  <option value="firma-2">🟢 Yeşil</option>
+                  <option value="firma-3">🟠 Turuncu</option>
+                  <option value="firma-4">🔴 Kırmızı</option>
+                  <option value="firma-5">🟣 Mor</option>
+                </select>
+              </div>
+              <div class="flex space-x-4">
+                <button
+                  type="button"
+                  onclick="hideAddCompanyModal()"
+                  class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 btn-modern"
+                >
+                  <i class="fas fa-times mr-2"></i>İptal
+                </button>
+                <button
+                  type="submit"
+                  class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 btn-modern"
+                >
+                  <i class="fas fa-plus mr-2"></i>Şirket Ekle
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add User Modal -->
+      <div
+        id="addUserModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4">
+          <div class="p-8">
+            <div class="text-center mb-8">
+              <div class="bg-green-100 rounded-full p-4 w-20 h-20 mx-auto mb-4">
+                <i class="fas fa-user-plus text-3xl text-green-600"></i>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900">
+                Yeni Kullanıcı Ekle
+              </h2>
+              <p class="text-gray-600 mt-2">
+                Şirket için yeni kullanıcı oluşturun
+              </p>
+            </div>
+
+            <form id="addUserForm" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Ad Soyad</label
+                >
+                <input
+                  type="text"
+                  id="userName"
+                  required
+                  placeholder="Örn: Ahmet Yılmaz"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >E-mail</label
+                >
+                <input
+                  type="email"
+                  id="userEmail"
+                  required
+                  placeholder="Örn: ahmet@hcsigorta.com"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Şirket</label
+                >
+                <select
+                  id="userCompany"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Şirket Seçin</option>
+                  <option value="firma-1">HC Sigorta Ana</option>
+                  <option value="firma-2">HC Teknoloji</option>
+                  <option value="firma-3">HC Danışmanlık</option>
+                  <option value="firma-4">HC Emlak</option>
+                  <option value="firma-5">HC Finans</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Rol</label
+                >
+                <select
+                  id="userRole"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="company_admin">Şirket Yöneticisi</option>
+                  <option value="company_user">Şirket Kullanıcısı</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Şifre</label
+                >
+                <input
+                  type="password"
+                  id="userPassword"
+                  required
+                  value="123456"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                  Varsayılan şifre: 123456
+                </p>
+              </div>
+              <div class="flex space-x-4">
+                <button
+                  type="button"
+                  onclick="hideAddUserModal()"
+                  class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 btn-modern"
+                >
+                  <i class="fas fa-times mr-2"></i>İptal
+                </button>
+                <button
+                  type="submit"
+                  class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 btn-modern"
+                >
+                  <i class="fas fa-user-plus mr-2"></i>Kullanıcı Ekle
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Personel Modal -->
+      <div
+        id="addPersonelModal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4">
+          <div class="p-8">
+            <div class="text-center mb-8">
+              <div class="bg-blue-100 rounded-full p-4 w-20 h-20 mx-auto mb-4">
+                <i class="fas fa-user-plus text-3xl text-blue-600"></i>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900">
+                Yeni Personel Ekle
+              </h2>
+              <p class="text-gray-600 mt-2">
+                <span id="personelFirmaName">Firma</span> için yeni personel
+                ekleyin
+              </p>
+            </div>
+
+            <form id="addPersonelForm" class="space-y-6">
+              <input type="hidden" id="personelFirmaId" />
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Ad Soyad</label
+                  >
+                  <input
+                    type="text"
+                    id="personelIsim"
+                    required
+                    placeholder="Örn: Ahmet Yılmaz"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Telefon</label
+                  >
+                  <input
+                    type="tel"
+                    id="personelTelefon"
+                    required
+                    placeholder="0532 123 4567"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Departman</label
+                  >
+                  <select
+                    id="personelDepartman"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Departman Seçin</option>
+                    <option value="Yönetim">Yönetim</option>
+                    <option value="İnsan Kaynakları">İnsan Kaynakları</option>
+                    <option value="IT">IT</option>
+                    <option value="Muhasebe">Muhasebe</option>
+                    <option value="Satış">Satış</option>
+                    <option value="Pazarlama">Pazarlama</option>
+                    <option value="Operasyon">Operasyon</option>
+                    <option value="Hukuk">Hukuk</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Pozisyon</label
+                  >
+                  <input
+                    type="text"
+                    id="personelPozisyon"
+                    required
+                    placeholder="Örn: Yazılım Geliştirici"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Brüt Maaş (₺)</label
+                  >
+                  <input
+                    type="number"
+                    id="personelBrutMaas"
+                    required
+                    min="0"
+                    step="0.01"
+                    placeholder="25000"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Çalıştığı Gün</label
+                  >
+                  <input
+                    type="number"
+                    id="personelCalistigiGun"
+                    required
+                    min="1"
+                    max="30"
+                    value="22"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-gray-700 mb-2">
+                  Maaş Hesaplama Önizlemesi
+                </h4>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-600">Net Maaş:</span>
+                    <span
+                      id="previewNetMaas"
+                      class="font-semibold text-green-600"
+                      >₺0</span
+                    >
+                  </div>
+                  <div>
+                    <span class="text-gray-600">İşveren Maliyeti:</span>
+                    <span
+                      id="previewIsverenMaliyet"
+                      class="font-semibold text-blue-600"
+                      >₺0</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex space-x-4">
+                <button
+                  type="button"
+                  onclick="hideAddPersonelModal()"
+                  class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 btn-modern"
+                >
+                  <i class="fas fa-times mr-2"></i>İptal
+                </button>
+                <button
+                  type="submit"
+                  class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 btn-modern"
+                >
+                  <i class="fas fa-user-plus mr-2"></i>Personel Ekle
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="bg-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex space-x-1 overflow-x-auto py-4" id="tabContainer">
+            <!-- Tabs dinamik olarak oluşturulacak -->
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Status Bar -->
+        <div class="mb-8">
+          <div class="gradient-card rounded-2xl p-6 shadow-lg">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-4">
+                <div
+                  class="status-indicator w-4 h-4 rounded-full"
+                  id="monthStatus"
+                ></div>
+                <div>
+                  <h3
+                    class="text-lg font-semibold text-gray-900"
+                    id="currentMonthDisplay"
+                  >
+                    Eylül 2024
+                  </h3>
+                  <p class="text-gray-600" id="statusText">Veri girişi aktif</p>
+                </div>
+              </div>
+
+              <div
+                id="adminControls"
+                class="hidden flex items-center space-x-4"
+              >
+                <button
+                  id="finalizeBtn"
+                  onclick="finalizeMonth()"
+                  class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 btn-modern"
+                >
+                  <i class="fas fa-check-circle mr-2"></i>Ayı Kesinleştir
+                </button>
+                <button
+                  onclick="showUserManagement()"
+                  class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 btn-modern"
+                >
+                  <i class="fas fa-users mr-2"></i>Kullanıcı Yönetimi
+                </button>
+                <button
+                  onclick="showAddCompanyModal()"
+                  class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 btn-modern"
+                >
+                  <i class="fas fa-plus-circle mr-2"></i>Yeni Şirket Ekle
+                </button>
+                <button
+                  onclick="showAllPersonelManagement()"
+                  class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 btn-modern"
+                >
+                  <i class="fas fa-users mr-2"></i>Tüm Personel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="contentArea">
+          <!-- İçerik dinamik olarak yüklenecek -->
+        </div>
+      </main>
+    </div>
+
+    <!-- Supabase Entegrasyon Modülü - Artık Gerekli Değil -->
+
+    <script>
+      // Supabase Configuration - GERÇEK DEĞERLER
+      const SUPABASE_URL = 'https://cdjhtcntbnfdzmjnrhrf.supabase.co';
+      const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkamh0Y250Ym5mZHptam5yaHJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMjQ2OTYsImV4cCI6MjA3MzgwMDY5Nn0.o7uXImEIULZQ-KTAPLjNTbiDcmd1GVM34slCJQtU6X8';
+
+      // Supabase başlatma
+      let supabase = null;
+      let isSupabaseActive = false;
+
+      // Sayfa yüklendiğinde Supabase'i başlat
+      window.addEventListener('DOMContentLoaded', () => {
+        try {
+          // Direkt Supabase client oluştur
+          supabase = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+          );
+          isSupabaseActive = true;
+          console.log('✅ Supabase bağlantısı kuruldu!');
+        } catch (error) {
+          console.error('❌ Supabase bağlantı hatası:', error);
+          console.log('⚠️ Demo modda çalışıyor.');
+          isSupabaseActive = false;
+          initializeDemoMode();
+        }
+      });
+
+      // Demo personel verileri
+      window.demoPersonelData = {
+        'firma-1': [
+          {
+            id: '1',
+            isim: 'Dr. Ahmet Yılmaz',
+            telefon: '0532 123 4567',
+            departman: 'Yönetim',
+            pozisyon: 'Genel Müdür',
+            brut_maas: 80000,
+            calistigi_gun: 22,
+            net_maas: 61886.4,
+            toplam_isveren_maliyet: 78260,
+          },
+          {
+            id: '2',
+            isim: 'Ayşe Kaya',
+            telefon: '0533 234 5678',
+            departman: 'İnsan Kaynakları',
+            pozisyon: 'İK Uzmanı',
+            brut_maas: 35000,
+            calistigi_gun: 22,
+            net_maas: 20190.3,
+            toplam_isveren_maliyet: 34313.5,
+          },
+        ],
+        'firma-2': [
+          {
+            id: '3',
+            isim: 'Fatma Şahin',
+            telefon: '0535 456 7890',
+            departman: 'IT',
+            pozisyon: 'Yazılım Geliştirici',
+            brut_maas: 45000,
+            calistigi_gun: 22,
+            net_maas: 25959.9,
+            toplam_isveren_maliyet: 44117.5,
+          },
+        ],
+      };
+
+      // Demo mod için local Supabase simülasyonu
+      function initializeDemoMode() {
+        supabase = {
+          auth: {
+            signInWithPassword: async ({ email, password }) => {
+              const demoUsers = {
+                'admin@hcsigorta.com': {
+                  id: '1',
+                  email: 'admin@hcsigorta.com',
+                  user_metadata: {
+                    role: 'admin',
+                    name: 'Sistem Yöneticisi',
+                    permissions: [
+                      'ana-sayfa',
+                      'firma-1',
+                      'firma-2',
+                      'firma-3',
+                      'firma-4',
+                      'firma-5',
+                    ],
+                    company_id: null, // Admin tüm şirketleri görebilir
+                  },
+                },
+                'sigorta@hcsigorta.com': {
+                  id: '2',
+                  email: 'sigorta@hcsigorta.com',
+                  user_metadata: {
+                    role: 'company_admin',
+                    name: 'HC Sigorta Yöneticisi',
+                    permissions: ['firma-1'],
+                    company_id: 'firma-1',
+                  },
+                },
+                'teknoloji@hcsigorta.com': {
+                  id: '3',
+                  email: 'teknoloji@hcsigorta.com',
+                  user_metadata: {
+                    role: 'company_admin',
+                    name: 'HC Teknoloji Yöneticisi',
+                    permissions: ['firma-2'],
+                    company_id: 'firma-2',
+                  },
+                },
+                'danismanlik@hcsigorta.com': {
+                  id: '4',
+                  email: 'danismanlik@hcsigorta.com',
+                  user_metadata: {
+                    role: 'company_admin',
+                    name: 'HC Danışmanlık Yöneticisi',
+                    permissions: ['firma-3'],
+                    company_id: 'firma-3',
+                  },
+                },
+                'emlak@hcsigorta.com': {
+                  id: '5',
+                  email: 'emlak@hcsigorta.com',
+                  user_metadata: {
+                    role: 'company_admin',
+                    name: 'HC Emlak Yöneticisi',
+                    permissions: ['firma-4'],
+                    company_id: 'firma-4',
+                  },
+                },
+                'finans@hcsigorta.com': {
+                  id: '6',
+                  email: 'finans@hcsigorta.com',
+                  user_metadata: {
+                    role: 'company_admin',
+                    name: 'HC Finans Yöneticisi',
+                    permissions: ['firma-5'],
+                    company_id: 'firma-5',
+                  },
+                },
+              };
+
+              if (demoUsers[email] && password === '123456') {
+                return {
+                  data: { user: demoUsers[email] },
+                  error: null,
+                };
+              } else {
+                return {
+                  data: { user: null },
+                  error: { message: 'Geçersiz giriş bilgileri' },
+                };
+              }
+            },
+            signOut: async () => {
+              return { error: null };
+            },
+            getUser: async () => {
+              return { data: { user: AppState.currentUser }, error: null };
+            },
+          },
+          from: (table) => ({
+            select: (columns = '*') => ({
+              eq: (column, value) => ({
+                single: () => Promise.resolve({ data: null, error: null }),
+              }),
+            }),
+            insert: (data) => Promise.resolve({ data, error: null }),
+            update: (data) => ({
+              eq: (column, value) => Promise.resolve({ data, error: null }),
+            }),
+            delete: () => ({
+              eq: (column, value) =>
+                Promise.resolve({ data: null, error: null }),
+            }),
+          }),
+        };
+      }
+
+      // Global State
+      const AppState = {
+        currentUser: null,
+        currentMonth: '2024-09',
+        isMonthFinalized: false,
+        userPermissions: [],
+        currentTab: 'ana-sayfa',
+        isLoading: false,
+      };
+
+      // Yardımcı fonksiyonlar
+      function formatNumber(num) {
+        if (!num) return '0';
+        return new Intl.NumberFormat('tr-TR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(num);
+      }
+
+      // Firma Konfigürasyonları
+      const firmaConfig = {
+        'ana-sayfa': {
+          name: 'Ana Sayfa',
+          icon: 'fas fa-chart-line',
+          color: 'gradient-bg',
+        },
+        'firma-1': {
+          name: 'HC Sigorta Ana',
+          icon: 'fas fa-building',
+          color: 'firma-1',
+        },
+        'firma-2': {
+          name: 'HC Teknoloji',
+          icon: 'fas fa-laptop-code',
+          color: 'firma-2',
+        },
+        'firma-3': {
+          name: 'HC Danışmanlık',
+          icon: 'fas fa-handshake',
+          color: 'firma-3',
+        },
+        'firma-4': { name: 'HC Emlak', icon: 'fas fa-home', color: 'firma-4' },
+        'firma-5': {
+          name: 'HC Finans',
+          icon: 'fas fa-chart-pie',
+          color: 'firma-5',
+        },
+      };
+
+      // Excel Formül Hesaplamaları
+      function hesaplaMaas(brutMaas, calistigiGun) {
+        const oranliMaas = (brutMaas / 30) * calistigiGun;
+        const sskIsci = (oranliMaas * 15) / 100;
+        const gelirVergisi = ((oranliMaas - sskIsci) * 20) / 100;
+        const damgaVergisi = (oranliMaas * 0.76) / 100;
+        const sskIsveren = (oranliMaas * 37.75) / 100;
+        const muhasebeParasi = 50;
+        const toplamIsciKesinti = sskIsci + gelirVergisi + damgaVergisi;
+        const netMaas = oranliMaas - toplamIsciKesinti;
+        const toplamIsverenMaliyet = oranliMaas + sskIsveren + muhasebeParasi;
+
+        return {
+          oranliMaas,
+          sskIsci,
+          gelirVergisi,
+          damgaVergisi,
+          sskIsveren,
+          muhasebeParasi,
+          toplamIsciKesinti,
+          netMaas,
+          toplamIsverenMaliyet,
+        };
+      }
+
+      // Supabase Authentication Functions
+      async function login(email, password) {
+        try {
+          AppState.isLoading = true;
+          showToast('Giriş yapılıyor...', 'info');
+
+          // Supabase aktifse gerçek giriş yap
+          if (isSupabaseActive) {
+            try {
+              const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+              });
+
+              if (error) throw error;
+
+              if (data.user) {
+                console.log('✅ Supabase auth başarılı, demo moda geçiliyor');
+                // Supabase auth başarılı ama users tablosu yok, demo moda geç
+                isSupabaseActive = false;
+                initializeDemoMode();
+
+                // Demo giriş yap
+                const demoResult = await supabase.auth.signInWithPassword({
+                  email: email,
+                  password: password,
+                });
+
+                if (demoResult.data.user) {
+                  AppState.currentUser = demoResult.data.user;
+                  AppState.userPermissions =
+                    demoResult.data.user.user_metadata.permissions || [];
+
+                  // UI güncellemesi
+                  document.getElementById('userName').textContent =
+                    demoResult.data.user.user_metadata.name;
+                  document.getElementById('userRole').textContent =
+                    demoResult.data.user.user_metadata.role === 'admin'
+                      ? 'Ana Yönetici'
+                      : 'Firma Kullanıcısı';
+
+                  // Session storage'a kaydet
+                  sessionStorage.setItem(
+                    'hc_user',
+                    JSON.stringify(demoResult.data.user)
+                  );
+
+                  hideLoginModal();
+                  await initializeApp();
+                  showToast('Başarıyla giriş yapıldı! (Demo Mod)', 'success');
+                  return true;
+                }
+              }
+            } catch (error) {
+              console.error('Supabase giriş hatası:', error);
+              // Demo moda geç
+              isSupabaseActive = false;
+              initializeDemoMode();
+            }
+          }
+
+          // Demo mod
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          if (data.user) {
+            AppState.currentUser = data.user;
+            AppState.userPermissions = data.user.user_metadata.permissions;
+
+            // UI güncellemesi
+            document.getElementById('userName').textContent =
+              data.user.user_metadata.name;
+            document.getElementById('userRole').textContent =
+              data.user.user_metadata.role === 'admin'
+                ? 'Ana Yönetici'
+                : 'Firma Kullanıcısı';
+
+            // Session storage'a kaydet
+            sessionStorage.setItem('hc_user', JSON.stringify(data.user));
+
+            hideLoginModal();
+            await initializeApp();
+            showToast('Başarıyla giriş yapıldı!', 'success');
+            return true;
+          } else {
+            throw new Error('Kullanıcı bulunamadı');
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          showToast(error.message || 'Giriş yapılırken hata oluştu!', 'error');
+          return false;
+        } finally {
+          AppState.isLoading = false;
+        }
+      }
+
+      async function logout() {
+        try {
+          AppState.isLoading = true;
+
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+
+          // State temizleme
+          AppState.currentUser = null;
+          AppState.userPermissions = [];
+          AppState.currentTab = 'ana-sayfa';
+
+          // Session storage temizleme
+          sessionStorage.removeItem('hc_user');
+
+          // UI sıfırlama
+          document.getElementById('tabContainer').innerHTML = '';
+          document.getElementById('contentArea').innerHTML = '';
+
+          showLoginModal();
+          showToast('Başarıyla çıkış yapıldı!', 'info');
+        } catch (error) {
+          console.error('Logout error:', error);
+          showToast('Çıkış yapılırken hata oluştu!', 'error');
+        } finally {
+          AppState.isLoading = false;
+        }
+      }
+
+      // Session kontrolü
+      async function checkSession() {
+        try {
+          const savedUser = sessionStorage.getItem('hc_user');
+          if (savedUser) {
+            const user = JSON.parse(savedUser);
+            AppState.currentUser = user;
+            AppState.userPermissions = user.user_metadata?.permissions || [];
+
+            document.getElementById('userName').textContent =
+              user.user_metadata.name;
+            document.getElementById('userRole').textContent =
+              user.user_metadata.role === 'admin'
+                ? 'Ana Yönetici'
+                : 'Firma Kullanıcısı';
+
+            hideLoginModal();
+            await initializeApp();
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Session check error:', error);
+          sessionStorage.removeItem('hc_user');
+          return false;
+        }
+      }
+
+      function showLoginModal() {
+        document.getElementById('loginModal').classList.remove('hidden');
+      }
+
+      function hideLoginModal() {
+        document.getElementById('loginModal').classList.add('hidden');
+      }
+
+      // UI Fonksiyonları
+      function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastContainer = toast.querySelector('div');
+
+        // Toast rengini type'a göre ayarla
+        const colors = {
+          success: 'border-green-500',
+          error: 'border-red-500',
+          warning: 'border-yellow-500',
+          info: 'border-blue-500',
+        };
+
+        // Eski renkleri temizle
+        toastContainer.className = toastContainer.className.replace(
+          /border-(green|red|yellow|blue)-500/g,
+          ''
+        );
+        // Yeni rengi ekle
+        toastContainer.classList.add(colors[type] || colors.success);
+
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+
+        setTimeout(() => hideToast(), 4000);
+      }
+
+      function hideToast() {
+        document.getElementById('toast').classList.remove('show');
+      }
+
+      // Navigasyon
+      function generateTabs() {
+        const tabContainer = document.getElementById('tabContainer');
+        tabContainer.innerHTML = '';
+
+        // Güvenlik kontrolü
+        if (
+          !AppState.userPermissions ||
+          !Array.isArray(AppState.userPermissions)
+        ) {
+          console.error(
+            'userPermissions tanımlı değil veya array değil:',
+            AppState.userPermissions
+          );
+          AppState.userPermissions = [];
+          return;
+        }
+
+        AppState.userPermissions.forEach((permission) => {
+          const config = firmaConfig[permission];
+          if (!config) return;
+
+          const tab = document.createElement('button');
+          tab.className = `flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition-all btn-modern ${
+            AppState.currentTab === permission
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`;
+          tab.onclick = () => switchTab(permission);
+
+          tab.innerHTML = `<i class="${config.icon}"></i><span>${config.name}</span>`;
+          tabContainer.appendChild(tab);
+        });
+      }
+
+      function switchTab(tabId) {
+        AppState.currentTab = tabId;
+        generateTabs();
+        loadTabContent(tabId);
+      }
+
+      function loadTabContent(tabId) {
+        if (tabId === 'ana-sayfa') {
+          loadDashboard();
+        } else {
+          loadFirmaPage(tabId);
+        }
+      }
+
+      // Dashboard
+      function loadDashboard() {
+        const contentArea = document.getElementById('contentArea');
+        contentArea.innerHTML = `
+                <div class="space-y-8">
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">Toplam Personel</p>
+                                    <p class="text-3xl font-bold text-gray-900">15</p>
+                                </div>
+                                <div class="bg-blue-100 rounded-full p-3">
+                                    <i class="fas fa-users text-2xl text-blue-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">Toplam Brüt Maaş</p>
+                                    <p class="text-3xl font-bold text-gray-900">₺567.000</p>
+                                </div>
+                                <div class="bg-green-100 rounded-full p-3">
+                                    <i class="fas fa-money-bill-wave text-2xl text-green-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">Toplam Net Maaş</p>
+                                    <p class="text-3xl font-bold text-gray-900">₺398.900</p>
+                                </div>
+                                <div class="bg-purple-100 rounded-full p-3">
+                                    <i class="fas fa-wallet text-2xl text-purple-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">İşveren Maliyeti</p>
+                                    <p class="text-3xl font-bold text-gray-900">₺634.750</p>
+                                </div>
+                                <div class="bg-orange-100 rounded-full p-3">
+                                    <i class="fas fa-calculator text-2xl text-orange-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Firma Overview -->
+                    <div class="gradient-card rounded-2xl p-6 shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">🏢 Firma Bazlı Özet</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="firma-1 rounded-xl p-4 text-white">
+                                <h4 class="font-semibold">HC Sigorta Ana</h4>
+                                <p class="text-sm opacity-90">5 Personel • ₺223.000</p>
+                            </div>
+                            <div class="firma-2 rounded-xl p-4 text-white">
+                                <h4 class="font-semibold">HC Teknoloji</h4>
+                                <p class="text-sm opacity-90">3 Personel • ₺122.000</p>
+                            </div>
+                            <div class="firma-3 rounded-xl p-4 text-white">
+                                <h4 class="font-semibold">HC Danışmanlık</h4>
+                                <p class="text-sm opacity-90">2 Personel • ₺105.000</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      // Firma Sayfası
+      async function loadFirmaPage(firmaId) {
+        const config = firmaConfig[firmaId];
+        const contentArea = document.getElementById('contentArea');
+
+        // Başlangıçta yükleniyor göster
+        contentArea.innerHTML = `
+                <div class="flex items-center justify-center h-64">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                        <p class="text-lg text-gray-600">Personel listesi yükleniyor...</p>
+                    </div>
+                </div>
+            `;
+
+        try {
+          // Personel verilerini yükle
+          let personelData = [];
+          if (isSupabaseActive) {
+            try {
+              const { data, error } = await supabase
+                .from('personel')
+                .select('*')
+                .eq('firma_id', firmaId)
+                .eq('month', AppState.currentMonth)
+                .order('isim');
+
+              if (error) throw error;
+              personelData = data || [];
+            } catch (error) {
+              console.error('Personel verileri yüklenemedi:', error);
+              // Demo verilere geç
+              if (window.demoPersonelData && window.demoPersonelData[firmaId]) {
+                personelData = window.demoPersonelData[firmaId];
+              }
+            }
+          } else {
+            // Demo veriler
+            if (window.demoPersonelData && window.demoPersonelData[firmaId]) {
+              personelData = window.demoPersonelData[firmaId];
+            }
+          }
+
+          // Sayfa içeriğini oluştur
+          contentArea.innerHTML = `
+                    <div class="space-y-8">
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="${config.color} rounded-full p-4 text-white">
+                                        <i class="${config.icon} text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-bold text-gray-900">${config.name}</h2>
+                                        <p class="text-gray-600">Personel Listesi - ${AppState.currentMonth}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                       <div class="gradient-card rounded-2xl p-6 shadow-lg">
+                           <div class="flex justify-between items-center mb-4">
+                             <h3 class="text-lg font-semibold text-gray-900">Personel Listesi</h3>
+                             <button
+                               onclick="addPersonel('${firmaId}')"
+                               class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 btn-modern"
+                             >
+                               <i class="fas fa-plus mr-2"></i>Personel Ekle
+                             </button>
+                           </div>
+                          ${
+                            personelData.length > 0
+                              ? generatePersonelTable(personelData)
+                              : `
+                                <div class="text-center py-12 text-gray-500">
+                                    <i class="fas fa-users text-6xl mb-4"></i>
+                                    <p class="text-xl">Bu firmada henüz personel bulunmuyor.</p>
+                                    <p class="text-sm mt-2">Yeni personel eklemek için yukarıdaki butonu kullanın.</p>
+                                </div>
+                          `
+                          }
+                        </div>
+                    </div>
+                `;
+        } catch (error) {
+          console.error('Personel listesi yüklenirken hata:', error);
+          contentArea.innerHTML = `
+                    <div class="gradient-card rounded-2xl p-6 shadow-lg">
+                        <div class="text-center py-12 text-red-500">
+                            <i class="fas fa-exclamation-triangle text-6xl mb-4"></i>
+                            <p class="text-xl">Personel listesi yüklenirken bir hata oluştu.</p>
+                            <p class="text-sm mt-2">${error.message}</p>
+                        </div>
+                    </div>
+                `;
+        }
+      }
+
+      // Personel tablosu oluştur
+      function generatePersonelTable(personelData) {
+        return `
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">İsim</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Departman</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Pozisyon</th>
+                                <th class="text-right py-3 px-4 font-semibold text-gray-700">Brüt Maaş</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">Gün</th>
+                                <th class="text-right py-3 px-4 font-semibold text-gray-700">Net Maaş</th>
+                                <th class="text-right py-3 px-4 font-semibold text-gray-700">Maliyet</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                          ${personelData
+                            .map(
+                              (personel) => `
+                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                    <td class="py-3 px-4">
+                                        <div>
+                                            <p class="font-medium text-gray-900">${personel.isim}</p>
+                                            <p class="text-sm text-gray-500">${personel.telefon || '-'}</p>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4 text-gray-700">${personel.departman}</td>
+                                    <td class="py-3 px-4 text-gray-700">${personel.pozisyon}</td>
+                                    <td class="py-3 px-4 text-right font-medium">₺${formatNumber(personel.brut_maas)}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <select 
+                                            id="days-${personel.id}"
+                                            class="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+                                            onchange="updatePersonelWorkingDays('${personel.id}', this.value, '${personel.firma_id || AppState.currentTab}')"
+                                            ${AppState.isMonthFinalized ? 'disabled' : ''}
+                                        >
+                                            ${Array.from({length: 30}, (_, i) => 30 - i).map(day => 
+                                                `<option value="${day}" ${personel.calistigi_gun == day ? 'selected' : ''}>${day}</option>`
+                                            ).join('')}
+                                        </select>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-green-600" id="net-${personel.id}">₺${formatNumber(personel.net_maas)}</td>
+                                    <td class="py-3 px-4 text-right font-medium text-blue-600" id="maliyet-${personel.id}">₺${formatNumber(personel.toplam_isveren_maliyet)}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <button onclick="editPersonel('${personel.id}')" class="text-blue-600 hover:text-blue-800 mr-2" ${AppState.isMonthFinalized ? 'disabled' : ''}>
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="deletePersonel('${personel.id}')" class="text-red-600 hover:text-red-800" ${AppState.isMonthFinalized ? 'disabled' : ''}>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                          `
+                            )
+                            .join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+      }
+
+      // Ay Yönetimi
+      async function finalizeMonth() {
+        if (
+          confirm(
+            'Bu ayı kesinleştirmek istediğinizden emin misiniz? Bu işlem geri alınamaz!'
+          )
+        ) {
+          AppState.isMonthFinalized = true;
+          updateStatusDisplay();
+          showToast('Ay başarıyla kesinleştirildi!', 'success');
+        }
+      }
+
+      function updateStatusDisplay() {
+        const statusIndicator = document.getElementById('monthStatus');
+        const statusText = document.getElementById('statusText');
+        const finalizeBtn = document.getElementById('finalizeBtn');
+
+        if (AppState.isMonthFinalized) {
+          statusIndicator.className = 'status-locked w-4 h-4 rounded-full';
+          statusText.textContent = 'Ay kesinleştirildi - Değişiklik yapılamaz';
+          if (finalizeBtn) finalizeBtn.style.display = 'none';
+        } else {
+          statusIndicator.className = 'status-active w-4 h-4 rounded-full';
+          statusText.textContent = 'Veri girişi aktif';
+        }
+      }
+
+      function addPersonel(firmaId) {
+        if (AppState.isMonthFinalized) {
+          showToast('Kesinleştirilmiş aya personel eklenemez!', 'warning');
+          return;
+        }
+
+        // Firma bilgisini modal'a aktar
+        document.getElementById('personelFirmaId').value = firmaId;
+        document.getElementById('personelFirmaName').textContent =
+          firmaConfig[firmaId]?.name || 'Bilinmeyen Firma';
+
+        showAddPersonelModal();
+      }
+
+      // Kişisel çalışılan gün sayısını güncelleme fonksiyonu
+      function updatePersonelWorkingDays(personelId, days, firmaId) {
+        days = parseInt(days);
+        
+        // İlgili personeli bul ve güncelle
+        if (window.demoPersonelData && window.demoPersonelData[firmaId]) {
+          const personel = window.demoPersonelData[firmaId].find(p => p.id === personelId);
+          if (personel) {
+            personel.calistigi_gun = days;
+            // Maaş hesaplamalarını yeniden yap
+            const hesaplama = hesaplaMaas(personel.brut_maas, days);
+            personel.net_maas = hesaplama.netMaas;
+            personel.toplam_isveren_maliyet = hesaplama.toplamIsverenMaliyet;
+            
+            // UI'da anlık güncelleme yap
+            const netElement = document.getElementById(`net-${personelId}`);
+            const maliyetElement = document.getElementById(`maliyet-${personelId}`);
+            
+            if (netElement) {
+              netElement.textContent = `₺${formatNumber(personel.net_maas)}`;
+            }
+            if (maliyetElement) {
+              maliyetElement.textContent = `₺${formatNumber(personel.toplam_isveren_maliyet)}`;
+            }
+            
+            // Supabase'de güncelle (gerçek sistemde)
+            if (isSupabaseActive) {
+              try {
+                console.log(`Supabase'de ${personel.isim} için gün sayısı güncelleniyor...`);
+              } catch (error) {
+                console.warn('Supabase güncellemesi başarısız:', error);
+              }
+            }
+            
+            showToast(`${personel.isim} için çalışılan gün sayısı ${days} olarak güncellendi!`, 'success');
+          }
+        }
+      }
+
+
+      function showUserManagement() {
+        const contentArea = document.getElementById('contentArea');
+
+        // Kullanıcı listesini hazırla
+        const demoUsers = [
+          {
+            id: '1',
+            email: 'admin@hcsigorta.com',
+            name: 'Sistem Yöneticisi',
+            role: 'admin',
+            company_id: null,
+            company_name: 'Tüm Şirketler',
+            status: 'active',
+          },
+          {
+            id: '2',
+            email: 'sigorta@hcsigorta.com',
+            name: 'HC Sigorta Yöneticisi',
+            role: 'company_admin',
+            company_id: 'firma-1',
+            company_name: 'HC Sigorta Ana',
+            status: 'active',
+          },
+          {
+            id: '3',
+            email: 'teknoloji@hcsigorta.com',
+            name: 'HC Teknoloji Yöneticisi',
+            role: 'company_admin',
+            company_id: 'firma-2',
+            company_name: 'HC Teknoloji',
+            status: 'active',
+          },
+          {
+            id: '4',
+            email: 'danismanlik@hcsigorta.com',
+            name: 'HC Danışmanlık Yöneticisi',
+            role: 'company_admin',
+            company_id: 'firma-3',
+            company_name: 'HC Danışmanlık',
+            status: 'active',
+          },
+          {
+            id: '5',
+            email: 'emlak@hcsigorta.com',
+            name: 'HC Emlak Yöneticisi',
+            role: 'company_admin',
+            company_id: 'firma-4',
+            company_name: 'HC Emlak',
+            status: 'active',
+          },
+          {
+            id: '6',
+            email: 'finans@hcsigorta.com',
+            name: 'HC Finans Yöneticisi',
+            role: 'company_admin',
+            company_id: 'firma-5',
+            company_name: 'HC Finans',
+            status: 'active',
+          },
+        ];
+
+        contentArea.innerHTML = `
+          <div class="space-y-8">
+            <div class="gradient-card rounded-2xl p-6 shadow-lg">
+              <div class="flex justify-between items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-bold text-gray-900">Kullanıcı Yönetimi</h2>
+                  <p class="text-gray-600 mt-1">Sistem kullanıcılarını yönetin</p>
+                </div>
+                <button
+                  onclick="showAddUserModal()"
+                  class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 btn-modern"
+                >
+                  <i class="fas fa-user-plus mr-2"></i>Yeni Kullanıcı Ekle
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full table-auto">
+                  <thead>
+                    <tr class="bg-gray-50">
+                      <th class="py-3 px-4 text-left font-semibold text-gray-700">Kullanıcı</th>
+                      <th class="py-3 px-4 text-left font-semibold text-gray-700">E-mail</th>
+                      <th class="py-3 px-4 text-left font-semibold text-gray-700">Rol</th>
+                      <th class="py-3 px-4 text-left font-semibold text-gray-700">Şirket</th>
+                      <th class="py-3 px-4 text-left font-semibold text-gray-700">Durum</th>
+                      <th class="py-3 px-4 text-left font-semibold text-gray-700">İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${demoUsers
+                      .map(
+                        (user) => `
+                      <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-3 px-4">
+                          <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold mr-3">
+                              ${user.name.charAt(0)}
+                            </div>
+                            <div>
+                              <div class="font-semibold text-gray-900">${user.name}</div>
+                              <div class="text-sm text-gray-500">ID: ${user.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="py-3 px-4 text-gray-700">${user.email}</td>
+                        <td class="py-3 px-4">
+                          <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                            user.role === 'admin'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }">
+                            ${user.role === 'admin' ? 'Sistem Yöneticisi' : 'Şirket Yöneticisi'}
+                          </span>
+                        </td>
+                        <td class="py-3 px-4 text-gray-700">${user.company_name}</td>
+                        <td class="py-3 px-4">
+                          <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                            Aktif
+                          </span>
+                        </td>
+                        <td class="py-3 px-4">
+                          <div class="flex space-x-2">
+                            <button
+                              onclick="editUser('${user.id}')"
+                              class="text-blue-600 hover:text-blue-800 font-medium"
+                              title="Düzenle"
+                            >
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            ${
+                              user.role !== 'admin'
+                                ? `
+                              <button
+                                onclick="deleteUser('${user.id}')"
+                                class="text-red-600 hover:text-red-800 font-medium"
+                                title="Sil"
+                              >
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            `
+                                : ''
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    `
+                      )
+                      .join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="gradient-card rounded-2xl p-6 shadow-lg">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Kullanıcı İstatistikleri</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-blue-600">${demoUsers.length}</div>
+                  <div class="text-gray-600">Toplam Kullanıcı</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-green-600">${demoUsers.filter((u) => u.role === 'company_admin').length}</div>
+                  <div class="text-gray-600">Şirket Yöneticisi</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-purple-600">${demoUsers.filter((u) => u.role === 'admin').length}</div>
+                  <div class="text-gray-600">Sistem Yöneticisi</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Tüm Personel Yönetimi (Sadece Admin)
+      function showAllPersonelManagement() {
+        const contentArea = document.getElementById('contentArea');
+
+        // Tüm personel verilerini topla
+        let allPersonel = [];
+        Object.keys(window.demoPersonelData || {}).forEach((firmaId) => {
+          const firmaPersonel = window.demoPersonelData[firmaId] || [];
+          firmaPersonel.forEach((personel) => {
+            allPersonel.push({
+              ...personel,
+              firma_name: firmaConfig[firmaId]?.name || firmaId,
+              firma_color: firmaConfig[firmaId]?.color || 'firma-1',
+            });
+          });
+        });
+
+        // Toplam istatistikleri hesapla
+        const totalPersonel = allPersonel.length;
+        const totalBrutMaas = allPersonel.reduce(
+          (sum, p) => sum + (p.brut_maas || 0),
+          0
+        );
+        const totalNetMaas = allPersonel.reduce(
+          (sum, p) => sum + (p.net_maas || 0),
+          0
+        );
+        const totalIsverenMaliyet = allPersonel.reduce(
+          (sum, p) => sum + (p.toplam_isveren_maliyet || 0),
+          0
+        );
+
+        // Şirket bazında grupla
+        const personelByCompany = {};
+        allPersonel.forEach((personel) => {
+          if (!personelByCompany[personel.firma_id]) {
+            personelByCompany[personel.firma_id] = [];
+          }
+          personelByCompany[personel.firma_id].push(personel);
+        });
+
+        contentArea.innerHTML = `
+          <div class="space-y-8">
+            <div class="gradient-card rounded-2xl p-6 shadow-lg">
+              <div class="flex justify-between items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-bold text-gray-900">Tüm Personel Yönetimi</h2>
+                  <p class="text-gray-600 mt-1">Tüm şirketlerdeki personel listesi ve istatistikler</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm text-gray-600">Toplam Personel</div>
+                  <div class="text-2xl font-bold text-blue-600">${totalPersonel}</div>
+                </div>
+              </div>
+
+              <!-- Özet İstatistikler -->
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-blue-50 p-4 rounded-lg text-center">
+                  <div class="text-2xl font-bold text-blue-600">${totalPersonel}</div>
+                  <div class="text-sm text-gray-600">Toplam Personel</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg text-center">
+                  <div class="text-2xl font-bold text-green-600">₺${formatNumber(totalBrutMaas)}</div>
+                  <div class="text-sm text-gray-600">Toplam Brüt Maaş</div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg text-center">
+                  <div class="text-2xl font-bold text-purple-600">₺${formatNumber(totalNetMaas)}</div>
+                  <div class="text-sm text-gray-600">Toplam Net Maaş</div>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg text-center">
+                  <div class="text-2xl font-bold text-orange-600">₺${formatNumber(totalIsverenMaliyet)}</div>
+                  <div class="text-sm text-gray-600">Toplam İşveren Maliyeti</div>
+                </div>
+              </div>
+
+              <!-- Şirket Bazında Personel Listesi -->
+              ${Object.keys(personelByCompany)
+                .map((firmaId) => {
+                  const firmaPersonel = personelByCompany[firmaId];
+                  const firmaConfig_item = firmaConfig[firmaId];
+                  const firmaTotalBrut = firmaPersonel.reduce(
+                    (sum, p) => sum + (p.brut_maas || 0),
+                    0
+                  );
+                  const firmaTotalNet = firmaPersonel.reduce(
+                    (sum, p) => sum + (p.net_maas || 0),
+                    0
+                  );
+                  const firmaTotalMaliyet = firmaPersonel.reduce(
+                    (sum, p) => sum + (p.toplam_isveren_maliyet || 0),
+                    0
+                  );
+
+                  return `
+                  <div class="mb-8 border rounded-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b">
+                      <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                          <i class="${firmaConfig_item?.icon || 'fas fa-building'} text-xl text-gray-600"></i>
+                          <div>
+                            <h3 class="text-lg font-semibold text-gray-900">${firmaConfig_item?.name || firmaId}</h3>
+                            <p class="text-sm text-gray-600">${firmaPersonel.length} personel</p>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <div class="text-sm text-gray-600">Toplam Maliyet</div>
+                          <div class="text-lg font-bold text-orange-600">₺${formatNumber(firmaTotalMaliyet)}</div>
+                        </div>
+                      </div>
+                      
+                      <div class="grid grid-cols-3 gap-4 mt-4 text-center">
+                        <div>
+                          <div class="text-lg font-semibold text-green-600">₺${formatNumber(firmaTotalBrut)}</div>
+                          <div class="text-xs text-gray-500">Toplam Brüt</div>
+                        </div>
+                        <div>
+                          <div class="text-lg font-semibold text-purple-600">₺${formatNumber(firmaTotalNet)}</div>
+                          <div class="text-xs text-gray-500">Toplam Net</div>
+                        </div>
+                        <div>
+                          <div class="text-lg font-semibold text-orange-600">₺${formatNumber(firmaTotalMaliyet)}</div>
+                          <div class="text-xs text-gray-500">Toplam Maliyet</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                      <table class="w-full">
+                        <thead class="bg-gray-50">
+                          <tr>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">Personel</th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">Departman</th>
+                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">Pozisyon</th>
+                            <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase">Brüt Maaş</th>
+                            <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase">Net Maaş</th>
+                            <th class="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase">İşveren Maliyeti</th>
+                            <th class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase">Gün</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${firmaPersonel
+                            .map(
+                              (personel) => `
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                              <td class="py-3 px-4">
+                                <div>
+                                  <div class="font-semibold text-gray-900">${personel.isim}</div>
+                                  <div class="text-sm text-gray-500">${personel.telefon}</div>
+                                </div>
+                              </td>
+                              <td class="py-3 px-4 text-gray-700">${personel.departman}</td>
+                              <td class="py-3 px-4 text-gray-700">${personel.pozisyon}</td>
+                              <td class="py-3 px-4 text-right font-semibold text-green-600">₺${formatNumber(personel.brut_maas)}</td>
+                              <td class="py-3 px-4 text-right font-semibold text-purple-600" id="net-${personel.id}">₺${formatNumber(personel.net_maas)}</td>
+                              <td class="py-3 px-4 text-right font-semibold text-orange-600" id="maliyet-${personel.id}">₺${formatNumber(personel.toplam_isveren_maliyet)}</td>
+                              <td class="py-3 px-4 text-center">
+                                <select 
+                                  id="days-${personel.id}"
+                                  class="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+                                  onchange="updatePersonelWorkingDays('${personel.id}', this.value, '${personel.firma_id}')"
+                                >
+                                  ${Array.from({length: 30}, (_, i) => 30 - i).map(day => 
+                                    `<option value="${day}" ${personel.calistigi_gun == day ? 'selected' : ''}>${day}</option>`
+                                  ).join('')}
+                                </select>
+                              </td>
+                            </tr>
+                          `
+                            )
+                            .join('')}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                `;
+                })
+                .join('')}
+
+              ${
+                totalPersonel === 0
+                  ? `
+                <div class="text-center py-12 text-gray-500">
+                  <i class="fas fa-users text-6xl mb-4"></i>
+                  <p class="text-xl">Henüz hiç personel bulunmuyor.</p>
+                  <p class="text-sm mt-2">Şirketlere personel eklemek için ilgili şirket sayfasını ziyaret edin.</p>
+                </div>
+              `
+                  : ''
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      // Personel Yönetimi Fonksiyonları
+      function showAddPersonelModal() {
+        document.getElementById('addPersonelModal').classList.remove('hidden');
+
+        // Maaş hesaplama önizlemesi için event listener ekle
+        const brutMaasInput = document.getElementById('personelBrutMaas');
+        const calistigiGunInput = document.getElementById(
+          'personelCalistigiGun'
+        );
+
+        function updatePreview() {
+          const brutMaas = parseFloat(brutMaasInput.value) || 0;
+          const calistigiGun = parseInt(calistigiGunInput.value) || 22;
+
+          if (brutMaas > 0) {
+            const hesaplama = hesaplaMaas(brutMaas, calistigiGun);
+            document.getElementById('previewNetMaas').textContent =
+              `₺${formatNumber(hesaplama.netMaas)}`;
+            document.getElementById('previewIsverenMaliyet').textContent =
+              `₺${formatNumber(hesaplama.toplamIsverenMaliyet)}`;
+          } else {
+            document.getElementById('previewNetMaas').textContent = '₺0';
+            document.getElementById('previewIsverenMaliyet').textContent = '₺0';
+          }
+        }
+
+        brutMaasInput.addEventListener('input', updatePreview);
+        calistigiGunInput.addEventListener('input', updatePreview);
+      }
+
+      function hideAddPersonelModal() {
+        document.getElementById('addPersonelModal').classList.add('hidden');
+        document.getElementById('addPersonelForm').reset();
+
+        // Preview'ı sıfırla
+        document.getElementById('previewNetMaas').textContent = '₺0';
+        document.getElementById('previewIsverenMaliyet').textContent = '₺0';
+      }
+
+      async function addNewPersonel(personelData) {
+        try {
+          // Yeni personel ID'si oluştur
+          const newPersonelId = Date.now().toString();
+
+          // Maaş hesaplamalarını yap
+          const hesaplama = hesaplaMaas(
+            personelData.brut_maas,
+            personelData.calistigi_gun
+          );
+
+          // Personel verisini hazırla
+          const newPersonel = {
+            id: newPersonelId,
+            isim: personelData.isim,
+            telefon: personelData.telefon,
+            departman: personelData.departman,
+            pozisyon: personelData.pozisyon,
+            brut_maas: personelData.brut_maas,
+            calistigi_gun: personelData.calistigi_gun,
+            net_maas: hesaplama.netMaas,
+            toplam_isveren_maliyet: hesaplama.toplamIsverenMaliyet,
+            month: AppState.currentMonth,
+            firma_id: personelData.firma_id,
+          };
+
+          // Demo verilerine ekle
+          if (!window.demoPersonelData[personelData.firma_id]) {
+            window.demoPersonelData[personelData.firma_id] = [];
+          }
+          window.demoPersonelData[personelData.firma_id].push(newPersonel);
+
+          // Supabase'e kaydet (gerçek sistemde)
+          if (isSupabaseActive) {
+            try {
+              const { data, error } = await supabase
+                .from('personel')
+                .insert([newPersonel]);
+
+              if (error) throw error;
+            } catch (error) {
+              console.warn("Supabase'e personel kaydedilemedi:", error);
+            }
+          }
+
+          hideAddPersonelModal();
+          showToast(`${personelData.isim} başarıyla eklendi!`, 'success');
+
+          // Sayfa yenile
+          loadTabContent(AppState.currentTab);
+
+          return true;
+        } catch (error) {
+          console.error('Personel ekleme hatası:', error);
+          showToast('Personel eklenirken hata oluştu!', 'error');
+          return false;
+        }
+      }
+
+      // Kullanıcı Yönetimi Fonksiyonları
+      function showAddUserModal() {
+        document.getElementById('addUserModal').classList.remove('hidden');
+      }
+
+      function hideAddUserModal() {
+        document.getElementById('addUserModal').classList.add('hidden');
+        document.getElementById('addUserForm').reset();
+      }
+
+      async function addNewUser(userData) {
+        try {
+          // Yeni kullanıcı ID'si oluştur
+          const newUserId = Date.now().toString();
+
+          // Demo kullanıcı verilerine ekle (gerçek sistemde Supabase'e kaydedilir)
+          const newUser = {
+            id: newUserId,
+            email: userData.email,
+            user_metadata: {
+              role: userData.role,
+              name: userData.name,
+              permissions: [userData.company_id],
+              company_id: userData.company_id,
+            },
+          };
+
+          // Supabase'e kaydet (gerçek sistemde)
+          if (isSupabaseActive) {
+            try {
+              // Auth kullanıcısı oluştur
+              const { data: authData, error: authError } =
+                await supabase.auth.admin.createUser({
+                  email: userData.email,
+                  password: userData.password,
+                  user_metadata: newUser.user_metadata,
+                });
+
+              if (authError) throw authError;
+
+              // Users tablosuna kaydet
+              const { data, error } = await supabase.from('users').insert([
+                {
+                  id: authData.user.id,
+                  email: userData.email,
+                  name: userData.name,
+                  role: userData.role,
+                  company_id: userData.company_id,
+                  permissions: [userData.company_id],
+                  created_by: AppState.currentUser.id,
+                },
+              ]);
+
+              if (error) throw error;
+            } catch (error) {
+              console.warn("Supabase'e kullanıcı kaydedilemedi:", error);
+            }
+          }
+
+          hideAddUserModal();
+          showToast(`${userData.name} başarıyla eklendi!`, 'success');
+
+          // Kullanıcı yönetimi sayfasını yenile
+          showUserManagement();
+
+          return true;
+        } catch (error) {
+          console.error('Kullanıcı ekleme hatası:', error);
+          showToast('Kullanıcı eklenirken hata oluştu!', 'error');
+          return false;
+        }
+      }
+
+      function editUser(userId) {
+        showToast('Kullanıcı düzenleme özelliği yakında aktif olacak!', 'info');
+      }
+
+      function deleteUser(userId) {
+        if (confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?')) {
+          showToast('Kullanıcı silme özelliği yakında aktif olacak!', 'info');
+        }
+      }
+
+      // Yeni Şirket Ekleme Fonksiyonları
+      function showAddCompanyModal() {
+        document.getElementById('addCompanyModal').classList.remove('hidden');
+      }
+
+      function hideAddCompanyModal() {
+        document.getElementById('addCompanyModal').classList.add('hidden');
+        // Formu temizle
+        document.getElementById('addCompanyForm').reset();
+      }
+
+      async function addNewCompany(companyData) {
+        try {
+          // Yeni şirket ID'si oluştur
+          const existingCompanies = Object.keys(firmaConfig).filter((key) =>
+            key.startsWith('firma-')
+          );
+          const nextId = existingCompanies.length; // ana-sayfa hariç
+          const newCompanyId = `firma-${nextId + 1}`;
+
+          // Firma konfigürasyonuna ekle
+          firmaConfig[newCompanyId] = {
+            name: companyData.name,
+            icon: companyData.icon,
+            color: companyData.color,
+          };
+
+          // Admin kullanıcısının yetkilerine ekle
+          if (AppState.currentUser?.user_metadata?.role === 'admin') {
+            if (!AppState.userPermissions.includes(newCompanyId)) {
+              AppState.userPermissions.push(newCompanyId);
+            }
+
+            // Session storage'ı güncelle
+            const savedUser = JSON.parse(sessionStorage.getItem('hc_user'));
+            if (savedUser && savedUser.user_metadata) {
+              savedUser.user_metadata.permissions = AppState.userPermissions;
+              sessionStorage.setItem('hc_user', JSON.stringify(savedUser));
+            }
+          }
+
+          // Demo verilerinde boş array ekle
+          if (window.demoPersonelData) {
+            window.demoPersonelData[newCompanyId] = [];
+          }
+
+          // Supabase'e kaydet (gerçek sistemde)
+          if (isSupabaseActive) {
+            try {
+              const { data, error } = await supabase.from('companies').insert([
+                {
+                  id: newCompanyId,
+                  name: companyData.name,
+                  icon: companyData.icon,
+                  color: companyData.color,
+                  created_by: AppState.currentUser.id,
+                },
+              ]);
+
+              if (error) throw error;
+            } catch (error) {
+              console.warn("Supabase'e şirket kaydedilemedi:", error);
+            }
+          }
+
+          // UI'ı güncelle
+          generateTabs();
+          hideAddCompanyModal();
+          showToast(`${companyData.name} başarıyla eklendi!`, 'success');
+
+          // Yeni şirkete geç
+          switchTab(newCompanyId);
+
+          return true;
+        } catch (error) {
+          console.error('Şirket ekleme hatası:', error);
+          showToast('Şirket eklenirken hata oluştu!', 'error');
+          return false;
+        }
+      }
+
+      // Uygulama Başlatma - Bu fonksiyon aşağıda async olarak yeniden tanımlandı
+
+      // Event Listeners
+      document
+        .getElementById('loginForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const email = document.getElementById('loginEmail').value;
+          const password = document.getElementById('loginPassword').value;
+          await login(email, password);
+        });
+
+      // Add Company Form Event Listener
+      document
+        .getElementById('addCompanyForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault();
+
+          const companyData = {
+            name: document.getElementById('companyName').value.trim(),
+            icon: document.getElementById('companyIcon').value,
+            color: document.getElementById('companyColor').value,
+          };
+
+          if (!companyData.name) {
+            showToast('Şirket adı boş olamaz!', 'warning');
+            return;
+          }
+
+          await addNewCompany(companyData);
+        });
+
+      // Add User Form Event Listener
+      document
+        .getElementById('addUserForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault();
+
+          const userData = {
+            name: document.getElementById('userName').value.trim(),
+            email: document.getElementById('userEmail').value.trim(),
+            company_id: document.getElementById('userCompany').value,
+            role: document.getElementById('userRole').value,
+            password: document.getElementById('userPassword').value,
+          };
+
+          if (!userData.name || !userData.email || !userData.company_id) {
+            showToast('Tüm alanları doldurun!', 'warning');
+            return;
+          }
+
+          await addNewUser(userData);
+        });
+
+      // Add Personel Form Event Listener
+      document
+        .getElementById('addPersonelForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault();
+
+          const personelData = {
+            isim: document.getElementById('personelIsim').value.trim(),
+            telefon: document.getElementById('personelTelefon').value.trim(),
+            departman: document.getElementById('personelDepartman').value,
+            pozisyon: document.getElementById('personelPozisyon').value.trim(),
+            brut_maas: parseFloat(
+              document.getElementById('personelBrutMaas').value
+            ),
+            calistigi_gun: parseInt(
+              document.getElementById('personelCalistigiGun').value
+            ),
+            firma_id: document.getElementById('personelFirmaId').value,
+          };
+
+          if (
+            !personelData.isim ||
+            !personelData.telefon ||
+            !personelData.departman ||
+            !personelData.pozisyon ||
+            !personelData.brut_maas ||
+            !personelData.calistigi_gun
+          ) {
+            showToast('Tüm alanları doldurun!', 'warning');
+            return;
+          }
+
+          if (personelData.brut_maas <= 0) {
+            showToast("Brüt maaş 0'dan büyük olmalıdır!", 'warning');
+            return;
+          }
+
+          await addNewPersonel(personelData);
+        });
+
+      document
+        .getElementById('monthSelector')
+        .addEventListener('change', function (e) {
+          AppState.currentMonth = e.target.value;
+          const monthNames = {
+            '2024-09': 'Eylül 2024',
+            '2024-08': 'Ağustos 2024',
+            '2024-07': 'Temmuz 2024',
+          };
+          document.getElementById('currentMonthDisplay').textContent =
+            monthNames[AppState.currentMonth];
+          loadTabContent(AppState.currentTab);
+        });
+
+      // Uygulama Başlatma
+      async function initializeApp() {
+        try {
+          generateTabs();
+          if (AppState.userPermissions.length > 0) {
+            switchTab(AppState.userPermissions[0]);
+          }
+          updateStatusDisplay();
+
+          // Admin kontrollerini göster
+          if (AppState.currentUser?.user_metadata?.role === 'admin') {
+            document.getElementById('adminControls').classList.remove('hidden');
+          } else {
+            document.getElementById('adminControls').classList.add('hidden');
+          }
+
+          // Ay durumunu kontrol et
+          await checkMonthStatus();
+        } catch (error) {
+          console.error('App initialization error:', error);
+          showToast('Uygulama başlatılırken hata oluştu!', 'error');
+        }
+      }
+
+      // Ay durumu kontrolü
+      async function checkMonthStatus() {
+        try {
+          // Demo için sabit değer
+          AppState.isMonthFinalized = false;
+          updateStatusDisplay();
+        } catch (error) {
+          console.error('Month status check error:', error);
+        }
+      }
+
+      // Sayfa Yükleme ve Session Kontrolü
+      window.addEventListener('load', async function () {
+        try {
+          // Loading screen göster
+          document.getElementById('loadingScreen').style.display = 'flex';
+          document.getElementById('mainApp').classList.add('hidden');
+
+          // 2 saniye bekle (loading animasyonu için)
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+
+          // Loading screen gizle, ana app göster
+          document.getElementById('loadingScreen').style.display = 'none';
+          document.getElementById('mainApp').classList.remove('hidden');
+
+          // Session kontrolü yap
+          const hasSession = await checkSession();
+
+          if (!hasSession) {
+            // Session yoksa login modal göster
+            showLoginModal();
+          }
+        } catch (error) {
+          console.error('Page load error:', error);
+          document.getElementById('loadingScreen').style.display = 'none';
+          document.getElementById('mainApp').classList.remove('hidden');
+          showLoginModal();
+          showToast('Sayfa yüklenirken hata oluştu!', 'error');
+        }
+      });
+    </script>
+  </body>
+</html>

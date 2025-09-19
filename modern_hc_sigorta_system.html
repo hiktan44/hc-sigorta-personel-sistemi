@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC Sigorta - Modern Personel Yönetim Sistemi</title>
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Modern CSS Framework (Tailwind benzeri) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <style>
+        /* Modern Gradient Backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Glassmorphism Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Modern Button Animations */
+        .btn-modern {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(0);
+        }
+        
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Firma Color Schemes */
+        .firma-1 { background: linear-gradient(135deg, #10b981, #34d399); }
+        .firma-2 { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .firma-3 { background: linear-gradient(135deg, #06b6d4, #22d3ee); }
+        .firma-4 { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .firma-5 { background: linear-gradient(135deg, #ec4899, #f472b6); }
+        .firma-6 { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+        .firma-7 { background: linear-gradient(135deg, #f97316, #fb923c); }
+        .firma-8 { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+        .firma-9 { background: linear-gradient(135deg, #8b5cf6, #c084fc); }
+        .firma-10 { background: linear-gradient(135deg, #06b6d4, #67e8f9); }
+        
+        /* Modern Table Styles */
+        .modern-table {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Loading Animation */
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        /* Status Indicators */
+        .status-active { background: linear-gradient(135deg, #10b981, #34d399); }
+        .status-locked { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .status-pending { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        
+        /* Month Selector */
+        .month-selector {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            padding: 8px;
+        }
+        
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        /* Modern Modal */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Responsive Grid */
+        .responsive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        /* Hover Effects */
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center z-50">
+        <div class="text-center text-white">
+            <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
+            <h2 class="text-2xl font-bold mb-2">HC Sigorta Sistemi Yükleniyor...</h2>
+            <p class="text-blue-100">Modern personel yönetim sistemi hazırlanıyor</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="bg-white rounded-lg shadow-lg p-4 border-l-4 border-green-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="gradient-bg shadow-2xl">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <!-- Logo and Title -->
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-white rounded-full p-3 shadow-lg">
+                            <i class="fas fa-building text-2xl text-blue-600"></i>
+                        </div>
+                        <div class="text-white">
+                            <h1 class="text-3xl font-bold">HC Sigorta</h1>
+                            <p class="text-blue-100">Modern Personel Yönetim Sistemi</p>
+                        </div>
+                    </div>
+
+                    <!-- Month Selector and User Info -->
+                    <div class="flex items-center space-x-6">
+                        <!-- Month Selector -->
+                        <div class="month-selector">
+                            <select id="monthSelector" class="bg-transparent text-white font-semibold focus:outline-none cursor-pointer">
+                                <option value="2024-01" class="text-gray-800">Ocak 2024</option>
+                                <option value="2024-02" class="text-gray-800">Şubat 2024</option>
+                                <option value="2024-03" class="text-gray-800">Mart 2024</option>
+                                <option value="2024-04" class="text-gray-800">Nisan 2024</option>
+                                <option value="2024-05" class="text-gray-800">Mayıs 2024</option>
+                                <option value="2024-06" class="text-gray-800">Haziran 2024</option>
+                                <option value="2024-07" class="text-gray-800">Temmuz 2024</option>
+                                <option value="2024-08" class="text-gray-800">Ağustos 2024</option>
+                                <option value="2024-09" class="text-gray-800" selected>Eylül 2024</option>
+                                <option value="2024-10" class="text-gray-800">Ekim 2024</option>
+                                <option value="2024-11" class="text-gray-800">Kasım 2024</option>
+                                <option value="2024-12" class="text-gray-800">Aralık 2024</option>
+                            </select>
+                        </div>
+
+                        <!-- User Info -->
+                        <div class="flex items-center space-x-3 text-white">
+                            <div class="bg-white bg-opacity-20 rounded-full p-2">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold" id="userName">Kullanıcı</p>
+                                <p class="text-sm text-blue-100" id="userRole">Yetki Seviyesi</p>
+                            </div>
+                            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Login Modal -->
+        <div id="loginModal" class="fixed inset-0 modal-backdrop flex items-center justify-center z-40">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+                <div class="p-8">
+                    <div class="text-center mb-8">
+                        <div class="bg-blue-100 rounded-full p-4 w-20 h-20 mx-auto mb-4">
+                            <i class="fas fa-lock text-3xl text-blue-600"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900">Giriş Yapın</h2>
+                        <p class="text-gray-600 mt-2">HC Sigorta Personel Sistemi</p>
+                    </div>
+
+                    <form id="loginForm" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                            <input type="email" id="loginEmail" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Şifre</label>
+                            <input type="password" id="loginPassword" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <button type="submit" 
+                            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all btn-modern">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Giriş Yap
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600">
+                            Demo hesaplar: 
+                            <br><strong>admin@hcsigorta.com</strong> (Ana Yönetici)
+                            <br><strong>teknoloji@hcsigorta.com</strong> (Firma Kullanıcısı)
+                            <br>Şifre: <strong>123456</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white shadow-lg sticky top-0 z-30" id="navigationTabs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex space-x-1 overflow-x-auto py-4" id="tabContainer">
+                    <!-- Tabs will be dynamically generated based on user permissions -->
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Status Bar -->
+            <div class="mb-8">
+                <div class="gradient-card rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="status-indicator w-4 h-4 rounded-full" id="monthStatus"></div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900" id="currentMonthDisplay">Eylül 2024</h3>
+                                <p class="text-gray-600" id="statusText">Veri girişi aktif</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Admin Controls -->
+                        <div id="adminControls" class="hidden flex items-center space-x-4">
+                            <button id="finalizeBtn" onclick="finalizeMonth()" 
+                                class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all btn-modern">
+                                <i class="fas fa-check-circle mr-2"></i>Ayı Kesinleştir
+                            </button>
+                            <button onclick="showUserManagement()" 
+                                class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all btn-modern">
+                                <i class="fas fa-users mr-2"></i>Kullanıcı Yönetimi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Sections -->
+            <div id="contentArea">
+                <!-- Content will be dynamically loaded based on selected tab -->
+            </div>
+        </main>
+    </div>
+    <script>
+        // Supabase Configuration (Demo - replace with real credentials)
+        const SUPABASE_URL = 'https://your-project.supabase.co';
+        const SUPABASE_ANON_KEY = 'your-anon-key';
+
+        // Global State Management
+        const AppState = {
+            currentUser: null,
+            currentMonth: '2024-09',
+            isMonthFinalized: false,
+            userPermissions: [],
+            currentTab: 'ana-sayfa'
+        };
+
+        // Firma Configurations
+        const firmaConfig = {
+            'ana-sayfa': { name: 'Ana Sayfa', icon: 'fas fa-chart-line', color: 'gradient-bg', adminOnly: true },
+            'firma-1': { name: 'HC Sigorta Ana', icon: 'fas fa-building', color: 'firma-1' },
+            'firma-2': { name: 'HC Teknoloji', icon: 'fas fa-laptop-code', color: 'firma-2' },
+            'firma-3': { name: 'HC Danışmanlık', icon: 'fas fa-handshake', color: 'firma-3' },
+            'firma-4': { name: 'HC Emlak', icon: 'fas fa-home', color: 'firma-4' },
+            'firma-5': { name: 'HC Finans', icon: 'fas fa-chart-pie', color: 'firma-5' },
+            'firma-6': { name: 'HC Turizm', icon: 'fas fa-plane', color: 'firma-6' },
+            'firma-7': { name: 'HC Sağlık', icon: 'fas fa-heartbeat', color: 'firma-7' },
+            'firma-8': { name: 'HC Eğitim', icon: 'fas fa-graduation-cap', color: 'firma-8' },
+            'firma-9': { name: 'HC Lojistik', icon: 'fas fa-truck', color: 'firma-9' },
+            'firma-10': { name: 'HC Enerji', icon: 'fas fa-bolt', color: 'firma-10' }
+        };
+
+        // Excel Formül Hesaplamaları
+        function hesaplaMaas(brutMaas, calistigiGun) {
+            const oranliMaas = (brutMaas / 30) * calistigiGun;
+            const sskIsci = oranliMaas * 15 / 100;
+            const gelirVergisi = (oranliMaas - sskIsci) * 20 / 100;
+            const damgaVergisi = oranliMaas * 0.76 / 100;
+            const sskIsveren = oranliMaas * 37.75 / 100;
+            const muhasebeParasi = 50;
+            const toplamIsciKesinti = sskIsci + gelirVergisi + damgaVergisi;
+            const netMaas = oranliMaas - toplamIsciKesinti;
+            const toplamIsverenMaliyet = oranliMaas + sskIsveren + muhasebeParasi;
+
+            return {
+                oranliMaas, sskIsci, gelirVergisi, damgaVergisi, sskIsveren,
+                muhasebeParasi, toplamIsciKesinti, netMaas, toplamIsverenMaliyet
+            };
+        }
+
+        // Authentication Functions
+        async function login(email, password) {
+            try {
+                const demoUsers = {
+                    'admin@hcsigorta.com': { 
+                        role: 'admin', 
+                        name: 'Sistem Yöneticisi',
+                        permissions: ['ana-sayfa', 'firma-1', 'firma-2', 'firma-3', 'firma-4', 'firma-5', 'firma-6', 'firma-7', 'firma-8', 'firma-9', 'firma-10']
+                    },
+                    'teknoloji@hcsigorta.com': { 
+                        role: 'user', 
+                        name: 'HC Teknoloji Kullanıcısı',
+                        permissions: ['firma-2']
+                    }
+                };
+
+                if (demoUsers[email] && password === '123456') {
+                    AppState.currentUser = { email, ...demoUsers[email] };
+                    AppState.userPermissions = demoUsers[email].permissions;
+                    
+                    document.getElementById('userName').textContent = demoUsers[email].name;
+                    document.getElementById('userRole').textContent = demoUsers[email].role === 'admin' ? 'Ana Yönetici' : 'Firma Kullanıcısı';
+                    
+                    hideLoginModal();
+                    initializeApp();
+                    showToast('Başarıyla giriş yapıldı!', 'success');
+                    return true;
+                } else {
+                    showToast('Geçersiz e-mail veya şifre!', 'error');
+                    return false;
+                }
+            } catch (error) {
+                showToast('Giriş yapılırken hata oluştu!', 'error');
+                return false;
+            }
+        }
+
+        function logout() {
+            AppState.currentUser = null;
+            AppState.userPermissions = [];
+            showLoginModal();
+            showToast('Başarıyla çıkış yapıldı!', 'info');
+        }
+
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+
+        // UI Functions
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => hideToast(), 4000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.remove('show');
+        }
+
+        // Navigation Functions
+        function generateTabs() {
+            const tabContainer = document.getElementById('tabContainer');
+            tabContainer.innerHTML = '';
+
+            AppState.userPermissions.forEach(permission => {
+                const config = firmaConfig[permission];
+                if (!config) return;
+
+                const tab = document.createElement('button');
+                tab.className = `flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition-all btn-modern ${
+                    AppState.currentTab === permission ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`;
+                tab.onclick = () => switchTab(permission);
+                
+                tab.innerHTML = `<i class="${config.icon}"></i><span>${config.name}</span>`;
+                tabContainer.appendChild(tab);
+            });
+        }
+
+        function switchTab(tabId) {
+            AppState.currentTab = tabId;
+            generateTabs();
+            loadTabContent(tabId);
+        }
+
+        function loadTabContent(tabId) {
+            if (tabId === 'ana-sayfa') {
+                loadDashboard();
+            } else {
+                loadFirmaPage(tabId);
+            }
+        }
+
+        // Dashboard Functions
+        function loadDashboard() {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = `
+                <div class="space-y-8">
+                    <div class="responsive-grid">
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">Toplam Personel</p>
+                                    <p class="text-3xl font-bold text-gray-900" id="totalPersonel">15</p>
+                                </div>
+                                <div class="bg-blue-100 rounded-full p-3">
+                                    <i class="fas fa-users text-2xl text-blue-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">Toplam Brüt Maaş</p>
+                                    <p class="text-3xl font-bold text-gray-900" id="totalBrut">₺567.000</p>
+                                </div>
+                                <div class="bg-green-100 rounded-full p-3">
+                                    <i class="fas fa-money-bill-wave text-2xl text-green-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">Toplam Net Maaş</p>
+                                    <p class="text-3xl font-bold text-gray-900" id="totalNet">₺398.900</p>
+                                </div>
+                                <div class="bg-purple-100 rounded-full p-3">
+                                    <i class="fas fa-wallet text-2xl text-purple-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gradient-card rounded-2xl p-6 shadow-lg hover-lift">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm font-medium">İşveren Maliyeti</p>
+                                    <p class="text-3xl font-bold text-gray-900" id="totalCost">₺634.750</p>
+                                </div>
+                                <div class="bg-orange-100 rounded-full p-3">
+                                    <i class="fas fa-calculator text-2xl text-orange-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Firma Page Functions
+        function loadFirmaPage(firmaId) {
+            const config = firmaConfig[firmaId];
+            const contentArea = document.getElementById('contentArea');
+            
+            contentArea.innerHTML = `
+                <div class="space-y-8">
+                    <div class="gradient-card rounded-2xl p-6 shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="${config.color} rounded-full p-4 text-white">
+                                    <i class="${config.icon} text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-gray-900">${config.name}</h2>
+                                    <p class="text-gray-600">Personel Listesi - ${AppState.currentMonth}</p>
+                                </div>
+                            </div>
+                            <button onclick="addPersonel('${firmaId}')" 
+                                class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all btn-modern ${AppState.isMonthFinalized ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${AppState.isMonthFinalized ? 'disabled' : ''}>
+                                <i class="fas fa-plus mr-2"></i>Yeni Personel Ekle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Month Management Functions
+        async function finalizeMonth() {
+            if (confirm('Bu ayı kesinleştirmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+                AppState.isMonthFinalized = true;
+                updateStatusDisplay();
+                showToast('Ay başarıyla kesinleştirildi!', 'success');
+            }
+        }
+
+        function updateStatusDisplay() {
+            const statusIndicator = document.getElementById('monthStatus');
+            const statusText = document.getElementById('statusText');
+            const finalizeBtn = document.getElementById('finalizeBtn');
+
+            if (AppState.isMonthFinalized) {
+                statusIndicator.className = 'status-locked w-4 h-4 rounded-full';
+                statusText.textContent = 'Ay kesinleştirildi - Değişiklik yapılamaz';
+                if (finalizeBtn) finalizeBtn.style.display = 'none';
+            } else {
+                statusIndicator.className = 'status-active w-4 h-4 rounded-full';
+                statusText.textContent = 'Veri girişi aktif';
+            }
+        }
+
+        function addPersonel(firmaId) {
+            if (AppState.isMonthFinalized) {
+                showToast('Kesinleştirilmiş aya personel eklenemez!', 'warning');
+                return;
+            }
+            showToast('Personel ekleme özelliği yakında aktif olacak!', 'info');
+        }
+
+        // App Initialization
+        function initializeApp() {
+            generateTabs();
+            switchTab(AppState.userPermissions[0]);
+            updateStatusDisplay();
+            
+            // Show admin controls if user is admin
+            if (AppState.currentUser?.role === 'admin') {
+                document.getElementById('adminControls').classList.remove('hidden');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            await login(email, password);
+        });
+
+        document.getElementById('monthSelector').addEventListener('change', function(e) {
+            AppState.currentMonth = e.target.value;
+            const monthNames = {
+                '01': 'Ocak', '02': 'Şubat', '03': 'Mart', '04': 'Nisan',
+                '05': 'Mayıs', '06': 'Haziran', '07': 'Temmuz', '08': 'Ağustos',
+                '09': 'Eylül', '10': 'Ekim', '11': 'Kasım', '12': 'Aralık'
+            };
+            const [year, month] = AppState.currentMonth.split('-');
+            document.getElementById('currentMonthDisplay').textContent = `${monthNames[month]} ${year}`;
+            
+            // Reload current tab data
+            loadTabContent(AppState.currentTab);
+        });
+
+        // Page Load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainApp').classList.remove('hidden');
+                showLoginModal();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

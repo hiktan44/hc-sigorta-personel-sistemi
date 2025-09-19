@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC Sigorta - Çok Firmalı Personel Yönetim Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: white;
+            min-width: 120px;
+        }
+
+        .tab-btn.active {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Firma Renkleri */
+        .tab-btn.ana-sayfa { background: linear-gradient(45deg, #667eea, #764ba2); }
+        .tab-btn.firma-1 { background: linear-gradient(45deg, #56ab2f, #a8e6cf); }
+        .tab-btn.firma-2 { background: linear-gradient(45deg, #ff6b6b, #ffa8a8); }
+        .tab-btn.firma-3 { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        .tab-btn.firma-4 { background: linear-gradient(45deg, #feca57, #ff9ff3); }
+        .tab-btn.firma-5 { background: linear-gradient(45deg, #ff9a9e, #fecfef); }
+        .tab-btn.firma-6 { background: linear-gradient(45deg, #a8edea, #fed6e3); }
+        .tab-btn.firma-7 { background: linear-gradient(45deg, #ffd89b, #19547b); }
+        .tab-btn.firma-8 { background: linear-gradient(45deg, #667db6, #0082c8); }
+        .tab-btn.firma-9 { background: linear-gradient(45deg, #f093fb, #f5576c); }
+        .tab-btn.firma-10 { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Ana Sayfa Özet Kartları */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .summary-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .summary-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        /* Firma Listesi */
+        .firma-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .firma-card {
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .firma-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .firma-card h3 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .firma-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-item .label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        /* Personel Tablosu */
+        .personel-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .personel-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .personel-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .personel-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .personel-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .personel-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Maliyet Renkleri */
+        .pozitif { color: #27ae60; font-weight: 600; }
+        .negatif { color: #e74c3c; font-weight: 600; }
+        .isveren-maliyet { color: #f39c12; font-weight: 600; }
+
+        /* Detay Butonu */
+        .detay-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .detay-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        /* Toplam Satırları */
+        .toplam-row {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef) !important;
+            font-weight: bold;
+            border-top: 2px solid #667eea;
+        }
+
+        .toplam-row td {
+            font-size: 14px !important;
+            color: #2c3e50 !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .tab-navigation {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                width: 100%;
+            }
+            
+            .personel-table {
+                font-size: 12px;
+            }
+            
+            .personel-table th,
+            .personel-table td {
+                padding: 8px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏢 HC Sigorta Personel Yönetim Sistemi</h1>
+            <p>Çok Firmalı Maaş Hesaplama ve Personel Takip Sistemi - 200 Kişi Kapasiteli</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn ana-sayfa active" onclick="showTab('ana-sayfa')">📊 Ana Sayfa</button>
+            <button class="tab-btn firma-1" onclick="showTab('firma-1')">🏢 HC Sigorta Ana</button>
+            <button class="tab-btn firma-2" onclick="showTab('firma-2')">🏭 HC Teknoloji</button>
+            <button class="tab-btn firma-3" onclick="showTab('firma-3')">🏪 HC Danışmanlık</button>
+            <button class="tab-btn firma-4" onclick="showTab('firma-4')">🏬 HC Emlak</button>
+            <button class="tab-btn firma-5" onclick="showTab('firma-5')">🏦 HC Finans</button>
+            <button class="tab-btn firma-6" onclick="showTab('firma-6')">🏨 HC Turizm</button>
+            <button class="tab-btn firma-7" onclick="showTab('firma-7')">🏥 HC Sağlık</button>
+            <button class="tab-btn firma-8" onclick="showTab('firma-8')">🎓 HC Eğitim</button>
+            <button class="tab-btn firma-9" onclick="showTab('firma-9')">🚗 HC Lojistik</button>
+            <button class="tab-btn firma-10" onclick="showTab('firma-10')">⚡ HC Enerji</button>
+        </div>
+
+        <!-- Ana Sayfa Tab -->
+        <div id="ana-sayfa" class="tab-content active">
+            <h2 style="margin-bottom: 30px; color: #2c3e50; text-align: center;">📈 Genel Özet ve Tüm Firmalar</h2>
+            
+            <!-- Özet Kartları -->
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <h3>Toplam Personel</h3>
+                    <div class="number" id="toplamPersonel">0</div>
+                    <p>Tüm firmalar toplamı</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Toplam Brüt Maaş</h3>
+                    <div class="number" id="toplamBrutMaas">₺0</div>
+                    <p>Aylık toplam</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Toplam Net Maaş</h3>
+                    <div class="number" id="toplamNetMaas">₺0</div>
+                    <p>Aylık toplam</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Toplam İşveren Maliyeti</h3>
+                    <div class="number" id="toplamIsverenMaliyet">₺0</div>
+                    <p>Aylık toplam</p>
+                </div>
+            </div>
+
+            <!-- Firma Kartları -->
+            <div class="firma-list" id="firmaKartlari">
+                <!-- Dinamik olarak doldurulacak -->
+            </div>
+
+            <!-- Tüm Personeller Tablosu -->
+            <div style="margin-top: 40px;">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">📋 Tüm Personeller (Firma Bazlı)</h3>
+                <div style="overflow-x: auto;">
+                    <table class="personel-table">
+                        <thead>
+                            <tr>
+                                <th>Firma</th>
+                                <th>Ad Soyad</th>
+                                <th>Departman</th>
+                                <th>Pozisyon</th>
+                                <th>Çalışılan Gün</th>
+                                <th>Brüt Maaş</th>
+                                <th>Net Maaş</th>
+                                <th>İşçi Kesintisi</th>
+                                <th>İşveren Maliyeti</th>
+                                <th>Detay</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tumPersonellerTablosu">
+                            <!-- Dinamik olarak doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Firma Sayfaları (10 Firma) -->
+        <div id="firma-1" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #56ab2f;">🏢 HC Sigorta Ana - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-1')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #56ab2f, #a8e6cf);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-1"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-2" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #ff6b6b;">🏭 HC Teknoloji - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-2')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #ff6b6b, #ffa8a8);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-2"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-3" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #4ecdc4;">🏪 HC Danışmanlık - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-3')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #4ecdc4, #44a08d);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-3"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-4" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #feca57;">🏬 HC Emlak - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-4')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #feca57, #ff9ff3);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-4"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-5" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #ff9a9e;">🏦 HC Finans - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-5')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #ff9a9e, #fecfef);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-5"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-6" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #a8edea;">🏨 HC Turizm - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-6')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #a8edea, #fed6e3);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-6"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-7" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #ffd89b;">🏥 HC Sağlık - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-7')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #ffd89b, #19547b);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-7"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-8" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #667db6;">🎓 HC Eğitim - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-8')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #667db6, #0082c8);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-8"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-9" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #f093fb;">🚗 HC Lojistik - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-9')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #f093fb, #f5576c);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-9"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="firma-10" class="tab-content">
+            <div class="personel-actions">
+                <h2 style="color: #4facfe;">⚡ HC Enerji - Personel Listesi</h2>
+                <button class="btn btn-success" onclick="showPersonelForm('firma-10')">➕ Yeni Personel Ekle</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="personel-table">
+                    <thead>
+                        <tr style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+                            <th>Ad Soyad</th><th>Telefon</th><th>Departman</th><th>Pozisyon</th><th>Çalışılan Gün</th>
+                            <th>Brüt Maaş</th><th>Net Maaş</th><th>İşçi Kesintisi</th><th>İşveren Maliyeti</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personelTablosu-firma-10"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firma Bilgileri ve Renkleri
+        const firmaBilgileri = {
+            'firma-1': { isim: 'HC Sigorta Ana', renk: 'linear-gradient(45deg, #56ab2f, #a8e6cf)', ikon: '🏢' },
+            'firma-2': { isim: 'HC Teknoloji', renk: 'linear-gradient(45deg, #ff6b6b, #ffa8a8)', ikon: '🏭' },
+            'firma-3': { isim: 'HC Danışmanlık', renk: 'linear-gradient(45deg, #4ecdc4, #44a08d)', ikon: '🏪' },
+            'firma-4': { isim: 'HC Emlak', renk: 'linear-gradient(45deg, #feca57, #ff9ff3)', ikon: '🏬' },
+            'firma-5': { isim: 'HC Finans', renk: 'linear-gradient(45deg, #ff9a9e, #fecfef)', ikon: '🏦' },
+            'firma-6': { isim: 'HC Turizm', renk: 'linear-gradient(45deg, #a8edea, #fed6e3)', ikon: '🏨' },
+            'firma-7': { isim: 'HC Sağlık', renk: 'linear-gradient(45deg, #ffd89b, #19547b)', ikon: '🏥' },
+            'firma-8': { isim: 'HC Eğitim', renk: 'linear-gradient(45deg, #667db6, #0082c8)', ikon: '🎓' },
+            'firma-9': { isim: 'HC Lojistik', renk: 'linear-gradient(45deg, #f093fb, #f5576c)', ikon: '🚗' },
+            'firma-10': { isim: 'HC Enerji', renk: 'linear-gradient(45deg, #4facfe, #00f2fe)', ikon: '⚡' }
+        };
+
+        // Personel Veritabanı (200 kişi kapasiteli)
+        let personelVeritabani = {};
+        Object.keys(firmaBilgileri).forEach(firmaId => {
+            personelVeritabani[firmaId] = [];
+        });
+
+        // Excel Formülü ile Maaş Hesaplama (Formül açıklamaları kaldırıldı)
+        function hesaplaMaas(brutMaas, calistigiGun) {
+            const oranliMaas = (brutMaas / 30) * calistigiGun;
+            const sskIsci = oranliMaas * 15 / 100;
+            const gelirVergisi = (oranliMaas - sskIsci) * 20 / 100;
+            const damgaVergisi = oranliMaas * 0.76 / 100;
+            const sskIsveren = oranliMaas * 37.75 / 100;
+            const muhasebeParasi = 50;
+            const toplamIsciKesinti = sskIsci + gelirVergisi + damgaVergisi;
+            const netMaas = oranliMaas - toplamIsciKesinti;
+            const toplamIsverenMaliyet = oranliMaas + sskIsveren + muhasebeParasi;
+
+            return {
+                oranliMaas, sskIsci, gelirVergisi, damgaVergisi, sskIsveren, 
+                muhasebeParasi, toplamIsciKesinti, netMaas, toplamIsverenMaliyet
+            };
+        }
+
+        // Tab Değiştirme
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab-btn.${tabId}`).classList.add('active');
+            if (tabId === 'ana-sayfa') updateAnaSayfaOzet();
+        }
+
+        // Ana Sayfa Özet Güncelleme
+        function updateAnaSayfaOzet() {
+            let toplamPersonel = 0, toplamBrutMaas = 0, toplamNetMaas = 0, toplamIsverenMaliyet = 0;
+            const firmaKartlari = document.getElementById('firmaKartlari');
+            firmaKartlari.innerHTML = '';
+
+            Object.keys(firmaBilgileri).forEach(firmaId => {
+                const firma = firmaBilgileri[firmaId];
+                const personeller = personelVeritabani[firmaId];
+                let firmaBrutMaas = 0, firmaNetMaas = 0, firmaIsverenMaliyet = 0;
+
+                personeller.forEach(personel => {
+                    const hesaplama = hesaplaMaas(personel.brutMaas, personel.calistigiGun);
+                    firmaBrutMaas += hesaplama.oranliMaas;
+                    firmaNetMaas += hesaplama.netMaas;
+                    firmaIsverenMaliyet += hesaplama.toplamIsverenMaliyet;
+                });
+
+                toplamPersonel += personeller.length;
+                toplamBrutMaas += firmaBrutMaas;
+                toplamNetMaas += firmaNetMaas;
+                toplamIsverenMaliyet += firmaIsverenMaliyet;
+
+                const firmaKart = document.createElement('div');
+                firmaKart.className = 'firma-card';
+                firmaKart.style.background = firma.renk;
+                firmaKart.innerHTML = `
+                    <h3>${firma.ikon} ${firma.isim}</h3>
+                    <div class="firma-stats">
+                        <div class="stat-item">
+                            <div class="label">Personel Sayısı</div>
+                            <div class="value">${personeller.length}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Brüt Maaş</div>
+                            <div class="value">₺${firmaBrutMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Net Maaş</div>
+                            <div class="value">₺${firmaNetMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">İşveren Maliyeti</div>
+                            <div class="value">₺${firmaIsverenMaliyet.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</div>
+                        </div>
+                    </div>
+                `;
+                firmaKartlari.appendChild(firmaKart);
+            });
+
+            document.getElementById('toplamPersonel').textContent = toplamPersonel;
+            document.getElementById('toplamBrutMaas').textContent = '₺' + toplamBrutMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0});
+            document.getElementById('toplamNetMaas').textContent = '₺' + toplamNetMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0});
+            document.getElementById('toplamIsverenMaliyet').textContent = '₺' + toplamIsverenMaliyet.toLocaleString('tr-TR', {maximumFractionDigits: 0});
+            updateTumPersonellerTablosu();
+        }
+
+        // Tüm Personeller Tablosu Güncelleme
+        function updateTumPersonellerTablosu() {
+            const tbody = document.getElementById('tumPersonellerTablosu');
+            tbody.innerHTML = '';
+
+            Object.keys(firmaBilgileri).forEach(firmaId => {
+                const firma = firmaBilgileri[firmaId];
+                const personeller = personelVeritabani[firmaId];
+
+                personeller.forEach((personel, index) => {
+                    const hesaplama = hesaplaMaas(personel.brutMaas, personel.calistigiGun);
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="background: ${firma.renk}; color: white; font-weight: bold;">${firma.ikon} ${firma.isim}</td>
+                        <td>${personel.isim}</td>
+                        <td>${personel.departman}</td>
+                        <td>${personel.pozisyon}</td>
+                        <td>${personel.calistigiGun} gün</td>
+                        <td class="pozitif">₺${hesaplama.oranliMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                        <td class="pozitif">₺${hesaplama.netMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                        <td class="negatif">₺${hesaplama.toplamIsciKesinti.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                        <td class="isveren-maliyet">₺${hesaplama.toplamIsverenMaliyet.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                        <td><button class="detay-btn" onclick="alert('Detay: ${personel.isim}')">👁️ Detay</button></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Firma toplamı satırı ekle
+                if (personeller.length > 0) {
+                    let firmaBrutMaas = 0, firmaNetMaas = 0, firmaIsciKesinti = 0, firmaIsverenMaliyet = 0;
+
+                    personeller.forEach(personel => {
+                        const hesaplama = hesaplaMaas(personel.brutMaas, personel.calistigiGun);
+                        firmaBrutMaas += hesaplama.oranliMaas;
+                        firmaNetMaas += hesaplama.netMaas;
+                        firmaIsciKesinti += hesaplama.toplamIsciKesinti;
+                        firmaIsverenMaliyet += hesaplama.toplamIsverenMaliyet;
+                    });
+
+                    const toplamRow = document.createElement('tr');
+                    toplamRow.className = 'toplam-row';
+                    toplamRow.innerHTML = `
+                        <td><strong>${firma.ikon} ${firma.isim} TOPLAM</strong></td>
+                        <td><strong>${personeller.length} Personel</strong></td>
+                        <td>-</td><td>-</td><td>-</td>
+                        <td><strong>₺${firmaBrutMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                        <td><strong>₺${firmaNetMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                        <td><strong>₺${firmaIsciKesinti.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                        <td><strong>₺${firmaIsverenMaliyet.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                        <td>-</td>
+                    `;
+                    tbody.appendChild(toplamRow);
+                }
+            });
+        }
+
+        // Personel Ekleme Formu Göster (Basit Alert ile)
+        function showPersonelForm(firmaId) {
+            const firma = firmaBilgileri[firmaId];
+            const isim = prompt(`${firma.ikon} ${firma.isim} - Yeni Personel\n\nAd Soyad:`);
+            if (!isim) return;
+            
+            const brutMaas = parseFloat(prompt('Brüt Maaş (₺):') || '30000');
+            const calistigiGun = parseInt(prompt('Çalıştığı Gün (1-30):') || '22');
+            const departman = prompt('Departman:') || 'Genel';
+            const pozisyon = prompt('Pozisyon:') || 'Çalışan';
+
+            const personelData = {
+                isim, brutMaas, calistigiGun, departman, pozisyon,
+                telefon: '0532 XXX XXXX', email: isim.toLowerCase().replace(' ', '') + '@' + firma.isim.toLowerCase().replace(' ', '') + '.com'
+            };
+
+            personelVeritabani[firmaId].push(personelData);
+            updateFirmaTablosu(firmaId);
+            updateAnaSayfaOzet();
+            
+            const hesaplama = hesaplaMaas(brutMaas, calistigiGun);
+            alert(`✅ ${isim} başarıyla ${firma.isim}'e eklendi!\n\nBrüt: ₺${hesaplama.oranliMaas.toLocaleString('tr-TR')}\nNet: ₺${hesaplama.netMaas.toFixed(2)}\nİşveren Maliyeti: ₺${hesaplama.toplamIsverenMaliyet.toFixed(2)}`);
+        }
+
+        // Firma Tablosu Güncelle
+        function updateFirmaTablosu(firmaId) {
+            const tbody = document.getElementById(`personelTablosu-${firmaId}`);
+            const personeller = personelVeritabani[firmaId];
+            tbody.innerHTML = '';
+
+            personeller.forEach((personel, index) => {
+                const hesaplama = hesaplaMaas(personel.brutMaas, personel.calistigiGun);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${personel.isim}</td>
+                    <td>${personel.telefon || '-'}</td>
+                    <td>${personel.departman}</td>
+                    <td>${personel.pozisyon}</td>
+                    <td>${personel.calistigiGun} gün</td>
+                    <td class="pozitif">₺${hesaplama.oranliMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                    <td class="pozitif">₺${hesaplama.netMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                    <td class="negatif">₺${hesaplama.toplamIsciKesinti.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                    <td class="isveren-maliyet">₺${hesaplama.toplamIsverenMaliyet.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</td>
+                    <td><button class="detay-btn" onclick="alert('${personel.isim} Detayı')">👁️ Detay</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Firma toplamı ekle
+            if (personeller.length > 0) {
+                let firmaBrutMaas = 0, firmaNetMaas = 0, firmaIsciKesinti = 0, firmaIsverenMaliyet = 0;
+
+                personeller.forEach(personel => {
+                    const hesaplama = hesaplaMaas(personel.brutMaas, personel.calistigiGun);
+                    firmaBrutMaas += hesaplama.oranliMaas;
+                    firmaNetMaas += hesaplama.netMaas;
+                    firmaIsciKesinti += hesaplama.toplamIsciKesinti;
+                    firmaIsverenMaliyet += hesaplama.toplamIsverenMaliyet;
+                });
+
+                const toplamRow = document.createElement('tr');
+                toplamRow.className = 'toplam-row';
+                toplamRow.innerHTML = `
+                    <td><strong>TOPLAM (${personeller.length} Personel)</strong></td>
+                    <td>-</td><td>-</td><td>-</td><td>-</td>
+                    <td><strong>₺${firmaBrutMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                    <td><strong>₺${firmaNetMaas.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                    <td><strong>₺${firmaIsciKesinti.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                    <td><strong>₺${firmaIsverenMaliyet.toLocaleString('tr-TR', {maximumFractionDigits: 0})}</strong></td>
+                    <td>-</td>
+                `;
+                tbody.appendChild(toplamRow);
+            }
+        }
+
+        // Demo Veriler Ekle
+        function demoVeriEkle() {
+            // HC Sigorta Ana (5 personel)
+            personelVeritabani['firma-1'].push(
+                { isim: 'Dr. Ahmet Yılmaz', telefon: '0532 123 4567', email: 'ahmet@hcsigorta.com', departman: 'Yönetim', pozisyon: 'Genel Müdür', brutMaas: 80000, calistigiGun: 22 },
+                { isim: 'Ayşe Kaya', telefon: '0533 234 5678', email: 'ayse@hcsigorta.com', departman: 'İnsan Kaynakları', pozisyon: 'İK Uzmanı', brutMaas: 35000, calistigiGun: 22 },
+                { isim: 'Mehmet Demir', telefon: '0534 345 6789', email: 'mehmet@hcsigorta.com', departman: 'Satış', pozisyon: 'Satış Temsilcisi', brutMaas: 28000, calistigiGun: 20 },
+                { isim: 'Zehra Özkan', telefon: '0535 456 7890', email: 'zehra@hcsigorta.com', departman: 'Muhasebe', pozisyon: 'Mali Müşavir', brutMaas: 42000, calistigiGun: 22 },
+                { isim: 'Can Yıldırım', telefon: '0536 567 8901', email: 'can@hcsigorta.com', departman: 'IT', pozisyon: 'Sistem Analisti', brutMaas: 38000, calistigiGun: 22 }
+            );
+
+            // HC Teknoloji (3 personel)
+            personelVeritabani['firma-2'].push(
+                { isim: 'Fatma Şahin', telefon: '0535 456 7890', email: 'fatma@hcteknoloji.com', departman: 'IT', pozisyon: 'Yazılım Geliştirici', brutMaas: 45000, calistigiGun: 22 },
+                { isim: 'Ali Yıldız', telefon: '0536 567 8901', email: 'ali@hcteknoloji.com', departman: 'IT', pozisyon: 'Sistem Yöneticisi', brutMaas: 40000, calistigiGun: 22 },
+                { isim: 'Merve Kara', telefon: '0537 678 9012', email: 'merve@hcteknoloji.com', departman: 'IT', pozisyon: 'UX Designer', brutMaas: 37000, calistigiGun: 22 }
+            );
+
+            // HC Danışmanlık (2 personel)
+            personelVeritabani['firma-3'].push(
+                { isim: 'Zeynep Özkan', telefon: '0537 678 9012', email: 'zeynep@hcdanismanlik.com', departman: 'Hukuk', pozisyon: 'Hukuk Müşaviri', brutMaas: 50000, calistigiGun: 22 },
+                { isim: 'Emre Çelik', telefon: '0538 789 0123', email: 'emre@hcdanismanlik.com', departman: 'Danışmanlık', pozisyon: 'Kıdemli Danışman', brutMaas: 55000, calistigiGun: 22 }
+            );
+
+            // Diğer firmalara birer personel
+            personelVeritabani['firma-4'].push({ isim: 'Seda Aydın', telefon: '0539 890 1234', email: 'seda@hcemlak.com', departman: 'Satış', pozisyon: 'Emlak Uzmanı', brutMaas: 32000, calistigiGun: 22 });
+            personelVeritabani['firma-5'].push({ isim: 'Burak Koç', telefon: '0540 901 2345', email: 'burak@hcfinans.com', departman: 'Finans', pozisyon: 'Finansal Analist', brutMaas: 48000, calistigiGun: 22 });
+            personelVeritabani['firma-6'].push({ isim: 'Elif Demir', telefon: '0541 012 3456', email: 'elif@hcturizm.com', departman: 'Turizm', pozisyon: 'Tur Rehberi', brutMaas: 25000, calistigiGun: 20 });
+            personelVeritabani['firma-7'].push({ isim: 'Murat Kaya', telefon: '0542 123 4567', email: 'murat@hcsaglik.com', departman: 'Sağlık', pozisyon: 'Hemşire', brutMaas: 30000, calistigiGun: 22 });
+            personelVeritabani['firma-8'].push({ isim: 'Gül Yılmaz', telefon: '0543 234 5678', email: 'gul@hcegitim.com', departman: 'Eğitim', pozisyon: 'Öğretmen', brutMaas: 27000, calistigiGun: 22 });
+
+            // Tabloları güncelle
+            Object.keys(firmaBilgileri).forEach(firmaId => {
+                updateFirmaTablosu(firmaId);
+            });
+            updateAnaSayfaOzet();
+        }
+
+        // Sayfa yüklendiğinde demo verileri ekle
+        window.addEventListener('load', function() {
+            demoVeriEkle();
+            console.log('🏢 HC Sigorta Çok Firmalı Personel Sistemi Hazır!');
+            console.log('📊 10 Firma, 200 Personel Kapasiteli');
+            console.log('💰 Excel Formülleri Aktif (Formül açıklamaları ana dosyada saklandı)');
+            console.log('✅ Toplam 15 Demo Personel Eklendi');
+        });
+    </script>
+</body>
+</html>
