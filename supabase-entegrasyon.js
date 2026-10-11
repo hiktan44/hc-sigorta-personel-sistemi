@@ -173,7 +173,8 @@ const PersonelService = {
     }
 };
 
-// Firma işlemlericonst FirmaService = {
+// Firma işlemleri
+const FirmaService = {
     // Firma listesini getir
     async getFirmaList() {
         try {
@@ -213,7 +214,8 @@ const PersonelService = {
     }
 };
 
-// Ay durumu işlemlericonst MonthStatusService = {
+// Ay durumu işlemleri
+const MonthStatusService = {
     // Ay durumunu kontrol et
     async checkMonthStatus(month) {
         try {
@@ -252,7 +254,8 @@ const PersonelService = {
     }
 };
 
-// Özet ve raporlamaconst ReportService = {
+// Özet ve raporlama
+const ReportService = {
     // Firma özeti getir
     async getFirmaSummary(month) {
         try {
