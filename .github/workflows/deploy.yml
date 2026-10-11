@@ -1,4 +1,4 @@
-name: 🚀 Deploy HC Sigorta to GitHub Pages
+name: HC Sigorta GitHub Pages dağıtımı
 
 on:
   push:
@@ -17,22 +17,23 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout
+      - name: Kaynağı al
         uses: actions/checkout@v4
         
-      - name: 🔧 Setup Pages
+      - name: Pages ayarlarını hazırla
         uses: actions/configure-pages@v4
         
-      - name: 📤 Upload artifact
+      - name: Dağıtım dosyalarını hazırla
         uses: actions/upload-pages-artifact@v2
         with:
           path: '.'
           
-      - name: 🚀 Deploy to GitHub Pages
+      - name: GitHub Pages'e dağıt
         id: deployment
         uses: actions/deploy-pages@v3
